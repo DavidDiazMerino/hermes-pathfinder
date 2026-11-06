@@ -159,3 +159,30 @@ def test_guard_blocks_direct_domain_skill_writes(runtime):
 
 def test_guard_off_mode(runtime):
     assert guard("terminal", {"command": f"cat {DATA}/ledger.db"}, runtime, mode="off") is None
+
+
+def test_cosmetic_patch_on_backed_skill_is_allowed(runtime, verified_run):
+    runtime.ledger().link_skill("sap-odata-inspection", [verified_run], "applied")
+    patch = {"operations": [{"action": "patch", "name": "sap-odata-inspection",
+                             "old_string": "version: 0.1.0\nmetadata:",
+                             "new_string": "version: 0.1.0\nauthor: Hermes Agent\nlicense: MIT\nmetadata:"}]}
+    d = ev(patch, runtime)
+    assert d["allow"] and d["cosmetic"]
+
+
+def test_cosmetic_rule_does_not_cover_domain_or_evidence_edits(runtime, verified_run):
+    runtime.ledger().link_skill("sap-odata-inspection", [verified_run], "applied")
+    for old, new in [("a", "Deep insert in OData needs arrays"), ("evidence: [x]", "evidence: []"),
+                     ("a", "x" * 500), ("Use POST", "Use PUT"), ("version: 1", "version: 1\ninterface: odata-v4")]:
+        patch = {"operations": [{"action": "patch", "name": "sap-odata-inspection",
+                                 "old_string": old, "new_string": new}]}
+        assert not ev(patch, runtime)["allow"], (old, new)
+
+
+def test_interface_must_match_evidence_family(runtime, verified_run):
+    v4_skill = skill_md([verified_run]).replace("interface: odata-v2", "interface: odata-v4")
+    d = ev(create(v4_skill), runtime)  # verified_run is a V2 contract
+    assert not d["allow"] and "declares interface odata-v4" in d["message"]
+    rid = json.loads(tools.inspect({"contract": "fixture:sap/product_v4"}, runtime))["run_id"]
+    tools.lab({"run_id": rid, "claims": [{"type": "keys", "entity_set": "Product", "expect": ["Product"]}]}, runtime)
+    assert ev(create(v4_skill.replace(verified_run, rid)), runtime)["allow"]

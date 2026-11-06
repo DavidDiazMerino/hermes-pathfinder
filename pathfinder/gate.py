@@ -41,6 +41,42 @@ def declares_pathfinder(text: str) -> bool:
     return bool(m and _PATHFINDER_BLOCK_RE.search(m.group(1)))
 
 
+_INTERFACE_RE = re.compile(r"^\s+interface\s*:\s*['\"]?([a-z0-9-]+)", re.MULTILINE)
+COSMETIC_MAX_CHARS = 400
+
+
+def declared_interface(text: str) -> str | None:
+    m = _FRONTMATTER_RE.match(text or "")
+    if not m or not _PATHFINDER_BLOCK_RE.search(m.group(1)):
+        return None
+    hit = _INTERFACE_RE.search(m.group(1))
+    return hit.group(1) if hit else None
+
+
+SAFE_META_KEYS = {"author", "license", "version", "tags", "category", "platforms", "metadata", "hermes"}
+_YAML_KEY_LINE_RE = re.compile(r"^\s*(?:-\s+)?([A-Za-z_][A-Za-z0-9_-]*)\s*:")
+
+
+def is_cosmetic(op: dict[str, Any], kw_re: re.Pattern | None) -> bool:
+    """A targeted patch that only touches harmless frontmatter keys (author, license, version, tags...)
+    and says nothing about the domain. Anything in the body or the pathfinder block is substantive."""
+    if op.get("action") not in ("patch", "edit") or op.get("content") or op.get("file_path") not in (None, "", "SKILL.md"):
+        return False
+    old, new = str(op.get("old_string") or ""), str(op.get("new_string") or "")
+    if len(new) > COSMETIC_MAX_CHARS or not old.strip():
+        return False
+    both = old + "\n" + new
+    if "pathfinder" in both or RUN_ID_RE.search(both) or (kw_re is not None and kw_re.search(new)):
+        return False
+    for line in both.splitlines():
+        if not line.strip() or line.strip() == "---":
+            continue
+        m = _YAML_KEY_LINE_RE.match(line)
+        if not m or m.group(1) not in SAFE_META_KEYS:
+            return False
+    return True
+
+
 def keyword_regex(keywords: list[str]) -> re.Pattern | None:
     if not keywords:
         return None
@@ -85,6 +121,14 @@ def evaluate(args: dict[str, Any], ledger, *, mode: str = "strict",
         return decision
     decision["domain_skills"] = sorted({op.get("name") or "?" for op, _ in domain_ops})
 
+    # Small edits that say nothing about the domain (author, license, typos) need no new evidence.
+    any_kw = keyword_regex(keywords or [])
+    substantive = [(op, rs) for op, rs in domain_ops if not is_cosmetic(op, any_kw)]
+    decision["cosmetic"] = len(substantive) < len(domain_ops)
+    if not substantive:
+        return decision
+    domain_ops = substantive
+
     statuses = {rid: ledger.evidence_status(rid) for rid in cited}
     bad = {rid: st for rid, st in statuses.items() if st["status"] != "verified"}
     verified = [rid for rid, st in statuses.items() if st["status"] == "verified"]
@@ -101,6 +145,12 @@ def evaluate(args: dict[str, Any], ledger, *, mode: str = "strict",
         if op.get("action") == "create" or (op.get("action") in ("patch", "edit") and op.get("content")):
             if not declares_pathfinder(op_text(op)):
                 problems.append(f"skill '{name}': SKILL.md frontmatter lacks a metadata.pathfinder block")
+        declared_iface = declared_interface(op_text(op))
+        family = {"odata-v2": "v2", "odata-v4": "v4"}.get(declared_iface or "")
+        if family and verified and not any(statuses[r].get("family") == family for r in verified):
+            fams = sorted({str(statuses[r].get("family")) for r in verified})
+            problems.append(f"skill '{name}' declares interface {declared_iface} but its verified evidence "
+                            f"is for OData {', '.join(fams)}; verify a {declared_iface} contract")
         linked = {link["run_id"] for link in ledger.skill_links(name)} if name != "?" else set()
         if linked and verified and not (set(verified) - linked):
             problems.append(f"skill '{name}' is already backed by {sorted(linked)}; a change needs a newly "
