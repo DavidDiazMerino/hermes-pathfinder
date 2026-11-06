@@ -24,10 +24,13 @@ Its first domain pack covers **SAP** (OData V2 and V4 contracts).
 | `pathfinder_inspect` | Deterministic parser for OData `$metadata` (V2 and V4): keys (including composite), types, lengths, nullability, create/update/delete restrictions (`sap:` attributes, Capabilities and Core vocabularies, inline or external), navigations resolved to their target. |
 | Evidence ledger | Every inspection is stored with the file's SHA-256 and a `run_id` the agent cites. |
 | `enterprise-pathfinder:method` skill | The working method: orient, inspect, answer with provenance, then learn. |
-| `/pathfinder` | `/pathfinder <task>` starts a mission; `/pathfinder status` lists evidence runs. |
+| `/pathfinder` | `/pathfinder <task>` starts a mission; `/pathfinder status` lists runs, their evidence status and the skills they back. |
 
-Coming next: a deterministic lab for payload checks and a gate that lets Hermes save a domain skill
-only when it is backed by passing evidence.
+| `pathfinder_lab` | Tests the agent's own claims about a contract (keys, operations, navigations, required fields, payloads it expects to be accepted or refused). A run is `verified` only when its latest lab passed with at least one claim. |
+| Evidence gate | A `pre_tool_call` hook on `skill_manage`: an SAP-domain skill can be created only if it cites a verified run, and changed only with a newly verified run. Invented or failed run_ids are refused. The ledger and the skills folder are also guarded against writes that bypass the gate. Setting: `gate_mode` = `strict` (default), `declared` or `off`. |
+
+The gate stops hallucinated or untested skills from being saved. It is not a sandbox: an agent
+with unrestricted shell access running as your user could still work around it.
 
 ## Install (development)
 
@@ -61,6 +64,13 @@ Try it with the bundled synthetic samples:
 ```bash
 ~/.hermes/hermes-agent/venv/bin/python -m pytest -q
 hermes plugins doctor . --ci
+```
+
+`hermes chat -q` runs turns inside the running gateway, which keeps the plugin code it loaded.
+After changing the code, reload it there:
+
+```bash
+hermes plugins disable enterprise-pathfinder && hermes plugins enable enterprise-pathfinder
 ```
 
 ## License

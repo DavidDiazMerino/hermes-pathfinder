@@ -154,3 +154,12 @@ class Ledger:
         )
         cols = [c[0] for c in cur.description]
         return [dict(zip(cols, r)) for r in cur.fetchall()]
+
+    def linked_skills(self) -> dict[str, list[str]]:
+        out: dict[str, list[str]] = {}
+        for name, run_id in self.conn.execute(
+                "SELECT skill_name, run_id FROM skill_links ORDER BY created_at"):
+            out.setdefault(name, [])
+            if run_id not in out[name]:
+                out[name].append(run_id)
+        return out

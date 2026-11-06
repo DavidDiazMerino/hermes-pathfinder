@@ -56,26 +56,103 @@ def register(ctx):
         if child.is_dir() and (child / "SKILL.md").is_file():
             ctx.register_skill(child.name, child / "SKILL.md")
 
+    # ------------------------------------------------------------ evidence gate
+    from .pathfinder import gate, packs
+
+    def gate_settings() -> tuple[str, list[str]]:
+        mode = str(ctx.get_config("gate_mode", default="strict") or "strict").lower()
+        if mode not in gate.MODES:
+            mode = "strict"
+        keywords: list[str] = []
+        for domain in packs.available():
+            keywords += packs.load(domain).get("gate_keywords", [])
+        return mode, keywords
+
+    def guard_paths() -> tuple[str, list[str]]:
+        from plugins.plugin_storage import plugin_data_dir
+        data_dir = plugin_data_dir(PLUGIN_NAME)
+        hermes_home = data_dir.parent.parent  # <HERMES_HOME>/plugin-data/<name>
+        return str(data_dir), [str(hermes_home / "skills")]
+
+    def on_pre_tool_call(tool_name: str = "", args: dict | None = None, **kwargs):
+        if tool_name != "skill_manage":
+            try:
+                mode, keywords = gate_settings()
+                data_dir, roots = guard_paths()
+                message = gate.guard_other_tool(tool_name, args or {}, get_ledger(), data_dir=data_dir,
+                                                skills_roots=roots, mode=mode, keywords=keywords)
+            except Exception as exc:
+                logger.warning("pathfinder guard error: %s", exc, exc_info=True)
+                return None  # never break unrelated tools because of our own failure
+            return {"action": "block", "message": message} if message else None
+        try:
+            mode, keywords = gate_settings()
+            decision = gate.evaluate(args or {}, get_ledger(), mode=mode, keywords=keywords)
+        except Exception as exc:
+            # Fail closed for domain writes we cannot evaluate; say why.
+            logger.warning("pathfinder gate error: %s", exc, exc_info=True)
+            return {"action": "block", "message": f"Pathfinder evidence gate could not evaluate this write: {exc}"}
+        if not decision["allow"]:
+            return {"action": "block", "message": decision["message"]}
+        return None
+
+    def on_post_tool_call(tool_name: str = "", args: dict | None = None, result: str = "", **kwargs):
+        if tool_name != "skill_manage":
+            return
+        try:
+            import json as _json
+            payload = _json.loads(result) if isinstance(result, str) else (result or {})
+            if not isinstance(payload, dict) or not payload.get("success"):
+                return
+            mode, keywords = gate_settings()
+            ledger = get_ledger()
+            decision = gate.evaluate(args or {}, ledger, mode=mode, keywords=keywords)
+            if not decision["domain_skills"] or not decision["verified"]:
+                return
+            action = "staged" if payload.get("staged") else "applied"
+            for name in decision["domain_skills"]:
+                ledger.link_skill(name, decision["verified"], action)
+        except Exception as exc:
+            logger.warning("pathfinder: could not record skill evidence: %s", exc)
+
+    ctx.register_hook("pre_tool_call", on_pre_tool_call)
+    ctx.register_hook("post_tool_call", on_post_tool_call)
+
+    # ------------------------------------------------------------ /pathfinder
+    def status_text() -> str:
+        ledger = get_ledger()
+        runs = ledger.recent_runs(10)
+        if not runs:
+            return "No Pathfinder runs yet."
+        lines = ["Recent Pathfinder runs:"]
+        for r in runs:
+            st = ledger.evidence_status(r["run_id"])
+            lines.append(f"  {r['run_id']}  {st['status']:<9} {r['family'] or '':<3} {r['source_ref']}")
+        skills = ledger.linked_skills()
+        if skills:
+            lines.append("Skills backed by evidence:")
+            for name, run_ids in skills.items():
+                lines.append(f"  {name}: {', '.join(run_ids)}")
+        mode, _ = gate_settings()
+        lines.append(f"Evidence gate: {mode}")
+        return "\n".join(lines)
+
     def handle_pathfinder(raw_args: str, *, session_key: str = "", **kwargs) -> str:
         text = (raw_args or "").strip()
         if not text or text in {"help", "-h", "--help"}:
             return ("Usage:\n"
                     "  /pathfinder <task>     start a Pathfinder mission (SAP pack) for this task\n"
-                    "  /pathfinder status     show recent evidence runs")
+                    "  /pathfinder status     show evidence runs, their status and the skills they back")
         if text == "status":
             try:
-                runs = get_ledger().recent_runs(10)
+                return status_text()
             except Exception as exc:
                 return f"Pathfinder ledger unavailable: {exc}"
-            if not runs:
-                return "No Pathfinder runs yet."
-            return "Recent Pathfinder runs:\n" + "\n".join(
-                f"  {r['run_id']}  {r['kind']:<8} {r['family'] or '':<3} {r['source_ref']}" for r in runs)
         mission = (
             f"Pathfinder mission: {text}\n\n"
             f"Load skill_view('{PLUGIN_NAME}:method') and follow it. Use pathfinder_sources to orient "
-            "yourself before researching, and pathfinder_inspect for any fact about a contract. "
-            "Cite run_ids for claims about contracts."
+            "yourself, pathfinder_inspect for any fact about a contract and pathfinder_lab to test your "
+            "claims. Cite run_ids for claims about contracts."
         )
         try:
             if ctx.inject_message(mission, session_key=session_key or None):

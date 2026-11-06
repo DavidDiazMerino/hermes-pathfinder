@@ -502,5 +502,18 @@
       }
     ],
     "status": "documented"
-  }
+  },
+  "gate_keywords": [
+    "SAP",
+    "S/4HANA",
+    "S4HANA",
+    "OData",
+    "EDMX",
+    "$metadata",
+    "BAPI",
+    "IDoc",
+    "ABAP",
+    "Business Accelerator Hub",
+    "SAP Gateway"
+  ]
 }

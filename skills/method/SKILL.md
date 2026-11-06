@@ -34,8 +34,14 @@ skill of your own.
 4. **Answer with provenance.** Every claim about the contract cites the `run_id`. Every claim from
    documentation cites the source URL. Label practitioner guidance as such. Say plainly what you
    did not verify (for example: no call was made to a live system).
-5. **Learn.** When a procedure worked and is likely to recur, save it with `skill_manage` as a skill
-   of your own. In its frontmatter add:
+5. **Test your claims.** Before relying on what you concluded, call `pathfinder_lab(run_id=...)`
+   with small claims: keys, allowed operations, navigations, fields required on create, and at
+   least one payload you expect to be accepted and one you expect to be refused. Fix every failed
+   claim and run the lab again until it passes. A run whose latest lab passed is `verified`.
+6. **Learn.** When a procedure worked and is likely to recur, save it with `skill_manage` as a skill
+   of your own. The Pathfinder evidence gate refuses SAP-domain skill writes that do not cite a
+   verified run, and changes to an evidence-backed skill need a newly verified run. If a write is
+   refused, read the message, do what it asks, and retry. In the frontmatter add:
    ```yaml
    metadata:
      pathfinder:
@@ -59,5 +65,5 @@ skill of your own.
 
 ## Verification
 - Each contract fact in your answer maps to a `pathfinder_inspect` run_id.
-- `/pathfinder status` lists the runs you cited.
+- `/pathfinder status` lists the runs you cited as `verified`.
 - Any skill you saved names its domain, product, interface and evidence run_ids.

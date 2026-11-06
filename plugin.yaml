@@ -13,4 +13,14 @@ provides_tools:
   - pathfinder_sources
   - pathfinder_inspect
   - pathfinder_lab
-provides_hooks: []
+provides_hooks:
+  - pre_tool_call
+  - post_tool_call
+config_schema:
+  gate_mode:
+    type: str
+    default: strict
+    description: >-
+      Evidence gate for skill_manage writes. strict = SAP-domain skills (declared or detected by
+      content) need a verified Pathfinder run; declared = only skills that declare
+      metadata.pathfinder; off = no gate.
