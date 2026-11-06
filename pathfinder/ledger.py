@@ -26,13 +26,13 @@ CREATE TABLE IF NOT EXISTS runs (
     summary_json  TEXT NOT NULL,
     contract_file TEXT
 );
-CREATE TABLE IF NOT EXISTS checks (
-    run_id     TEXT NOT NULL,
-    check_id   TEXT NOT NULL,
-    status     TEXT NOT NULL,             -- passed | failed | skipped
-    detail     TEXT NOT NULL,
-    created_at REAL NOT NULL,
-    PRIMARY KEY (run_id, check_id)
+CREATE TABLE IF NOT EXISTS labs (
+    lab_id       TEXT PRIMARY KEY,
+    run_id       TEXT NOT NULL,
+    created_at   REAL NOT NULL,
+    passed       INTEGER NOT NULL,
+    counts_json  TEXT NOT NULL,
+    results_json TEXT NOT NULL
 );
 CREATE TABLE IF NOT EXISTS skill_links (
     skill_name TEXT NOT NULL,
@@ -94,6 +94,58 @@ class Ledger:
         if not path.is_file():
             return None
         return json.loads(path.read_text(encoding="utf-8"))
+
+    # ------------------------------------------------------------ labs
+    def record_lab(self, run_id: str, outcome: dict[str, Any]) -> str:
+        n = self.conn.execute("SELECT COUNT(*) FROM labs WHERE run_id = ?", (run_id,)).fetchone()[0]
+        lab_id = f"{run_id}/lab{n + 1}"
+        self.conn.execute(
+            "INSERT INTO labs VALUES (?,?,?,?,?,?)",
+            (lab_id, run_id, time.time(), 1 if outcome["passed"] else 0,
+             json.dumps(outcome["counts"]), json.dumps(outcome["results"])),
+        )
+        self.conn.commit()
+        return lab_id
+
+    def latest_lab(self, run_id: str) -> dict[str, Any] | None:
+        row = self.conn.execute(
+            "SELECT lab_id, created_at, passed, counts_json FROM labs WHERE run_id = ? "
+            "ORDER BY created_at DESC, lab_id DESC LIMIT 1", (run_id,)).fetchone()
+        if row is None:
+            return None
+        return {"lab_id": row[0], "created_at": row[1], "passed": bool(row[2]), "counts": json.loads(row[3])}
+
+    def evidence_status(self, run_id: str) -> dict[str, Any]:
+        """What a run can back: 'verified' only when its latest lab passed and checked at least one claim."""
+        run = self.get_run(run_id)
+        if run is None:
+            return {"run_id": run_id, "status": "unknown", "reason": "no such run in the Pathfinder ledger"}
+        lab = self.latest_lab(run_id)
+        if lab is None:
+            return {"run_id": run_id, "status": "inspected", "reason": "contract parsed, no lab run yet",
+                    "family": run["family"], "created_at": run["created_at"]}
+        if not lab["passed"]:
+            return {"run_id": run_id, "status": "failed", "reason": f"latest lab {lab['lab_id']} has failures",
+                    "family": run["family"], "created_at": lab["created_at"]}
+        if lab["counts"].get("claims", 0) == 0:
+            return {"run_id": run_id, "status": "inspected",
+                    "reason": "lab passed integrity checks but tested no claims", "family": run["family"],
+                    "created_at": lab["created_at"]}
+        return {"run_id": run_id, "status": "verified", "lab_id": lab["lab_id"], "family": run["family"],
+                "created_at": lab["created_at"]}
+
+    # ------------------------------------------------------------ skills
+    def link_skill(self, skill_name: str, run_ids: list[str], action: str) -> None:
+        now = time.time()
+        self.conn.executemany("INSERT INTO skill_links VALUES (?,?,?,?)",
+                              [(skill_name, r, action, now) for r in run_ids])
+        self.conn.commit()
+
+    def skill_links(self, skill_name: str) -> list[dict[str, Any]]:
+        cur = self.conn.execute(
+            "SELECT run_id, action, created_at FROM skill_links WHERE skill_name = ? ORDER BY created_at",
+            (skill_name,))
+        return [{"run_id": r[0], "action": r[1], "created_at": r[2]} for r in cur.fetchall()]
 
     def recent_runs(self, limit: int = 10) -> list[dict[str, Any]]:
         cur = self.conn.execute(

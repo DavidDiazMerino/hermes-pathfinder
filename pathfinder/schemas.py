@@ -56,3 +56,51 @@ INSPECT = {
         "required": ["contract"],
     },
 }
+
+_TARGET = {
+    "entity_set": {"type": "string", "description": "Entity set name (preferred when the claim is about an operation or payload)."},
+    "entity_type": {"type": "string", "description": "Entity type name, short or fully qualified."},
+}
+
+LAB = {
+    "name": "pathfinder_lab",
+    "description": (
+        "Deterministic lab for a contract you already inspected. Runs integrity checks and tests YOUR "
+        "claims about the contract: keys, allowed operations, navigations, fields required on create, "
+        "and example payloads you expect the service to accept ('valid') or refuse ('invalid'). Each "
+        "claim passes only when the lab agrees with you. Results are stored in the evidence ledger; a "
+        "run whose latest lab passed with at least one claim becomes 'verified' and is the only kind "
+        "of evidence that can back a saved domain skill. Offline."
+    ),
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "run_id": {"type": "string", "description": "run_id returned by pathfinder_inspect."},
+            "claims": {
+                "type": "array",
+                "description": "What you believe about the contract. Use several small claims rather than one big one.",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "type": {"type": "string", "enum": ["keys", "operation", "navigation", "required_fields", "payload"]},
+                        **_TARGET,
+                        "expect": {
+                            "anyOf": [{"type": "array", "items": {"type": "string"}}, {"type": "boolean"},
+                                      {"type": "string"}],
+                            "description": "keys / required_fields: list of property names. operation: true, "
+                                           "false or 'depends-on-record'. payload: 'valid' or 'invalid'.",
+                        },
+                        "op": {"type": "string", "enum": ["create", "update", "delete"], "description": "For operation claims."},
+                        "name": {"type": "string", "description": "Navigation name, for navigation claims."},
+                        "target": {"type": "string", "description": "Expected navigation target type."},
+                        "multiplicity": {"type": "string", "description": "Expected multiplicity: 1, 0..1 or *."},
+                        "operation": {"type": "string", "enum": ["create", "update"], "description": "For payload claims; default create."},
+                        "payload": {"type": "object", "description": "JSON request body; navigations allowed for deep insert."},
+                    },
+                    "required": ["type"],
+                },
+            },
+        },
+        "required": ["run_id"],
+    },
+}

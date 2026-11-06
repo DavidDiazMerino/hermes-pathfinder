@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable
 
-from . import edmx, packs
+from . import edmx, lab as lab_engine, packs
 from .ledger import Ledger
 
 # Above this many entity types the overview lists names only and asks to zoom in.
@@ -191,3 +191,42 @@ def inspect(args: dict[str, Any], rt: Runtime) -> str:
     out["note"] = ("Everything above was read from the file by a deterministic parser; nothing was inferred. "
                    "This is not a test against a live SAP system.")
     return _ok(out)
+
+
+# ---------------------------------------------------------------- lab
+def lab(args: dict[str, Any], rt: Runtime) -> str:
+    run_id = (args.get("run_id") or "").strip()
+    if not run_id:
+        return _err("missing 'run_id': inspect a contract first with pathfinder_inspect")
+    claims = args.get("claims") or []
+    if not isinstance(claims, list):
+        return _err("'claims' must be a list of claim objects")
+    try:
+        ledger = rt.ledger()
+        contract = ledger.load_contract(run_id)
+    except Exception as exc:
+        return _err(f"ledger unavailable: {exc}")
+    if contract is None:
+        return _err(f"unknown run_id {run_id!r}", recent_runs=[r["run_id"] for r in ledger.recent_runs(5)])
+    try:
+        outcome = lab_engine.run(contract, claims)
+    except Exception as exc:
+        return _err(f"unexpected lab error: {type(exc).__name__}: {exc}", run_id=run_id)
+    lab_id = ledger.record_lab(run_id, outcome)
+    status = ledger.evidence_status(run_id)
+    failed = [r for r in outcome["results"] if r["status"] == "failed"]
+    return _ok({
+        "run_id": run_id,
+        "lab_id": lab_id,
+        "passed": outcome["passed"],
+        "counts": outcome["counts"],
+        "evidence_status": status["status"],
+        "failed": failed,
+        "results": outcome["results"],
+        "next": ("Run is 'verified': it can back a skill (cite it under metadata.pathfinder.evidence)."
+                 if status["status"] == "verified" else
+                 "Fix the wrong claims (or the payloads) and run the lab again. Only a run whose latest "
+                 "lab passed with at least one claim can back a skill."),
+        "note": "Checks run offline against the parsed contract; they say nothing about a live system's "
+                "business rules or configuration.",
+    })

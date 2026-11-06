@@ -12,4 +12,5 @@ requires_hermes: ">=0.23.0"
 provides_tools:
   - pathfinder_sources
   - pathfinder_inspect
+  - pathfinder_lab
 provides_hooks: []

@@ -48,6 +48,8 @@ def register(ctx):
                       handler=lambda args, **kw: tools.sources(args or {}, rt), emoji="🧭")
     ctx.register_tool(name="pathfinder_inspect", toolset="pathfinder", schema=schemas.INSPECT,
                       handler=lambda args, **kw: tools.inspect(args or {}, rt), emoji="🔎")
+    ctx.register_tool(name="pathfinder_lab", toolset="pathfinder", schema=schemas.LAB,
+                      handler=lambda args, **kw: tools.lab(args or {}, rt), emoji="🧪")
 
     skills_dir = _ROOT / "skills"
     for child in sorted(skills_dir.iterdir()):
