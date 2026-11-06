@@ -46,6 +46,10 @@ Try it with the bundled synthetic samples:
 ## Safety and disclosures
 
 - **Offline.** No network calls. `pathfinder_inspect` reads only the file you name.
+- **Never calls SAP APIs.** Pathfinder works on contracts you supply. SAP's API Policy (v.4.2026a,
+  section 2.2.2) restricts agentic AI use of SAP APIs to SAP-endorsed architectures; the SAP pack
+  lists the governed paths SAP documents (API Management, SAP-managed MCP, the A2A Agent Gateway)
+  so you can evaluate them with your system owner.
 - XML is parsed with `defusedxml` (no DTDs, entities or external references) and a 5 MB limit.
 - Evidence is written to Hermes's per-plugin data directory (`<HERMES_HOME>/plugin-data/enterprise-pathfinder/`).
 - No credentials are read or stored.

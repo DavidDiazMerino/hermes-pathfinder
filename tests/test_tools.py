@@ -104,3 +104,29 @@ def test_v2_state_dependent_restrictions(runtime, tmp_path):
     es = r["entity_sets"][0]
     assert es["ops"] == "CRuD"
     assert es["updatable_path"] == "IsOpen" and es["requires_filter"] is True
+
+
+def test_sources_topic_filter_and_checks(runtime):
+    r = call(tools.sources, runtime, domain="sap", topic="policy")
+    assert r["ok"] and r["sources"] and {s["topic"] for s in r["sources"]} == {"policy"}
+    assert any("API_Policy_latest.pdf" in s["url"] for s in r["sources"])
+    assert r["governed_paths"]["paths"]
+    assert call(tools.sources, runtime, domain="sap", topic="nope")["ok"] is False
+
+
+def test_pack_sources_are_well_formed():
+    from pathfinder import packs
+    pack = packs.load("sap")
+    ids = [s["id"] for s in pack["sources"]]
+    assert len(ids) == len(set(ids))
+    for s in pack["sources"]:
+        assert s["topic"] in pack["source_topics"], s["id"]
+        assert s["check"] in pack["check_legend"], s["id"]
+        assert s["url"].startswith("https://"), s["id"]
+    known = set(ids)
+    for path in pack["governed_paths"]["paths"]:
+        assert path["source"] in known
+    for p in pack["pitfalls"]:
+        assert p["status"] in ("documented", "practitioner")
+        if p["status"] == "documented":
+            assert p.get("source", "").startswith("https://"), p["id"]

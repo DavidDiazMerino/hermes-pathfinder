@@ -4,9 +4,12 @@ SOURCES = {
     "name": "pathfinder_sources",
     "description": (
         "Orientation map for an enterprise software domain (currently: sap). Returns the questions to "
-        "settle first (product, edition, release, interface style, authorised access path), the "
-        "official sources to use for each kind of question, the product matrix, known pitfalls "
-        "labelled 'documented' or 'practitioner', and sample contracts you can inspect offline. "
+        "settle first (product, edition, release, interface style, authorised access path), official "
+        "SAP sources grouped by need (find an API and check it is released, product docs and release "
+        "availability, communication arrangements, SAP reference architectures, API policy and "
+        "AI-agent access), each with how it was verified, the governed paths SAP documents for agent "
+        "access, the product matrix, known pitfalls labelled 'documented' or 'practitioner', and "
+        "sample contracts you can inspect offline. "
         "Call this before researching or answering anything about an SAP API, so you start from "
         "trusted sources instead of guessing. Offline; makes no network calls."
     ),
@@ -18,6 +21,15 @@ SOURCES = {
                 "type": "string",
                 "description": "Optional product id to narrow the answer, e.g. 's4hana-cloud-public', "
                                "'s4hana-private-onprem', 'ecc', 'integration-suite'.",
+            },
+            "topic": {
+                "type": "string",
+                "enum": ["find-api", "product-docs", "connectivity", "architecture", "policy", "standards",
+                         "learning", "community"],
+                "description": "Optional: only sources for one need, e.g. 'find-api' (which published API "
+                               "exists, is it released), 'connectivity' (communication arrangements), "
+                               "'architecture' (SAP reference architectures), 'policy' (API policy, AI-agent "
+                               "access, governed paths).",
             },
         },
         "required": [],

@@ -37,18 +37,27 @@ def sources(args: dict[str, Any], rt: Runtime) -> str:
     except packs.PackError as exc:
         return _err(str(exc), available_domains=packs.available())
     product = (args.get("product") or "").strip()
+    topic = (args.get("topic") or "").strip()
+    topics = pack.get("source_topics", {})
+    if topic and topic not in topics:
+        return _err(f"unknown topic {topic!r}", topics=topics)
     products = pack["products"]
     if product:
         products = [p for p in products if p["id"] == product] or products
+    srcs = [s for s in pack["sources"] if not topic or s.get("topic") == topic]
     return _ok({
         "domain": pack["id"],
         "pack_version": pack["pack_version"],
         "disclaimer": pack["disclaimer"],
         "source_policy": pack["source_policy"],
-        "ask_first": pack["orientation_questions"] if not product else [],
+        "ask_first": pack["orientation_questions"] if not (product or topic) else [],
         "products": products,
         "interface_formats": pack["interface_formats"],
-        "sources": pack["sources"],
+        "source_topics": topics,
+        "sources": srcs,
+        "sources_checked_on": pack.get("sources_checked_on"),
+        "check_legend": pack.get("check_legend"),
+        "governed_paths": pack.get("governed_paths"),
         "pitfalls": pack["pitfalls"],
         "sample_contracts": [
             {"ref": f"fixture:{domain}/{fx['id']}", "family": fx["family"], "description": fx["description"]}
