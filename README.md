@@ -31,6 +31,13 @@ Its first domain pack covers **SAP** (OData V2 and V4 contracts).
 The gate stops hallucinated or untested skills from being saved. It is not a sandbox: an agent
 with unrestricted shell access running as your user could still work around it.
 
+## Does it help?
+
+Measured with real Hermes sessions, same model with and without the plugin ([docs/eval.md](docs/eval.md)):
+accuracy was equal (all runs correct in both conditions); on a realistically sized contract
+(500 KB, 48 entity types) the plugin used about 51% fewer tokens and 34% less time, and every answer
+came with a verified lab record. On tiny contracts it costs more.
+
 ## Install (development)
 
 ```bash

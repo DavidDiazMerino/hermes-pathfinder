@@ -1,0 +1,145 @@
+{
+ "stamp": "20261106-111056",
+ "prompt": "I work with SAP. service_metadata.xml in this folder is the $metadata of an SAP OData service.\nFor every entity set, tell me: its key properties; whether create, update and delete are allowed;\nthe properties a create request must carry (Nullable=false and not set by the server; list them even\nif the set itself does not allow create); and its navigation properties with target entity type and\nwhether they are to-many. Do not create or modify any skills.\n\nEnd your answer with exactly one fenced ```json block in this shape:\n{\"entity_sets\": {\"<EntitySetName>\": {\"keys\": [\"...\"], \"create\": true, \"update\": true, \"delete\": true,\n \"required_on_create\": [\"...\"], \"navigations\": {\"<NavName>\": {\"target\": \"<EntityTypeName>\", \"many\": true}}}}}",
+ "conditions": {
+  "A": "pathfinder-baseline",
+  "C": "pathfinder"
+ },
+ "summary": [
+  {
+   "condition": "A",
+   "contract": "business_partner_v2",
+   "runs": 1,
+   "score_mean": 1.0,
+   "perfect_runs": 1,
+   "tokens_mean": 44458.0,
+   "wall_s_mean": 64.3,
+   "tool_calls_mean": 1.0
+  },
+  {
+   "condition": "A",
+   "contract": "product_v4",
+   "runs": 1,
+   "score_mean": 1.0,
+   "perfect_runs": 1,
+   "tokens_mean": 43692.0,
+   "wall_s_mean": 66.6,
+   "tool_calls_mean": 1.0
+  },
+  {
+   "condition": "C",
+   "contract": "business_partner_v2",
+   "runs": 1,
+   "score_mean": 1.0,
+   "perfect_runs": 1,
+   "tokens_mean": 94122.0,
+   "wall_s_mean": 79.7,
+   "tool_calls_mean": 5.0
+  },
+  {
+   "condition": "C",
+   "contract": "product_v4",
+   "runs": 1,
+   "score_mean": 1.0,
+   "perfect_runs": 1,
+   "tokens_mean": 105265.0,
+   "wall_s_mean": 74.3,
+   "tool_calls_mean": 6.0
+  }
+ ],
+ "runs": [
+  {
+   "condition": "A",
+   "contract": "business_partner_v2",
+   "run": 1,
+   "exit": 0,
+   "wall_s": 64.3,
+   "infra_error": false,
+   "retries": 0,
+   "duration_ms": 58327,
+   "tokens": 44458,
+   "tool_calls": 1,
+   "tools": [
+    "read_file"
+   ],
+   "used_pathfinder": false,
+   "points": 18,
+   "total": 18,
+   "ratio": 1.0,
+   "parsed": true,
+   "errors": []
+  },
+  {
+   "condition": "C",
+   "contract": "business_partner_v2",
+   "run": 1,
+   "exit": 0,
+   "wall_s": 79.7,
+   "infra_error": false,
+   "retries": 1,
+   "duration_ms": 79214,
+   "tokens": 94122,
+   "tool_calls": 5,
+   "tools": [
+    "skill_view",
+    "tool_describe",
+    "pathfinder_inspect",
+    "tool_describe",
+    "pathfinder_lab"
+   ],
+   "used_pathfinder": true,
+   "points": 18,
+   "total": 18,
+   "ratio": 1.0,
+   "parsed": true,
+   "errors": []
+  },
+  {
+   "condition": "A",
+   "contract": "product_v4",
+   "run": 1,
+   "exit": 0,
+   "wall_s": 66.6,
+   "infra_error": false,
+   "retries": 0,
+   "duration_ms": 60650,
+   "tokens": 43692,
+   "tool_calls": 1,
+   "tools": [
+    "read_file"
+   ],
+   "used_pathfinder": false,
+   "points": 18,
+   "total": 18,
+   "ratio": 1.0,
+   "parsed": true,
+   "errors": []
+  },
+  {
+   "condition": "C",
+   "contract": "product_v4",
+   "run": 1,
+   "exit": 0,
+   "wall_s": 74.3,
+   "infra_error": false,
+   "retries": 0,
+   "duration_ms": 68420,
+   "tokens": 105265,
+   "tool_calls": 6,
+   "tools": [
+    "tool_describe",
+    "read_file",
+    "skill_view",
+    "skill_view",
+    "pathfinder_inspect",
+    "pathfinder_lab"
+   ],
+   "used_pathfinder": true,
+   "points": 18,
+   "total": 18,
+   "ratio": 1.0,
+   "parsed": true,
+   "errors": []
+  }
+ ]
+}

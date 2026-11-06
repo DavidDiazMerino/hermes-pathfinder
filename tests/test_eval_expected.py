@@ -24,3 +24,15 @@ def test_extract_and_score():
     r = sc.score(sc.extract_answer(text), exp)
     assert r["points"] == 6 and r["parsed"] and any("missing" in e for e in r["errors"])
     assert sc.score(sc.extract_answer("no json"), exp)["parsed"] is False
+
+
+@pytest.mark.parametrize("seed", [7, 11, 23])
+def test_parser_matches_generated_large_contract(tmp_path, seed):
+    from eval import gen_large
+    path, expected, targets = gen_large.generate(tmp_path, seed=seed)
+    contract = edmx.parse_file(path)
+    assert contract["issues"] == [] and contract["summary"]["entity_types"] == 48
+    derived = sc.answer_from_contract(contract)
+    derived = {"entity_sets": {k: v for k, v in derived["entity_sets"].items() if k in targets}}
+    result = sc.score(derived, expected)
+    assert result["points"] == result["total"], result["errors"]

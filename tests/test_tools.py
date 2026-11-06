@@ -130,3 +130,11 @@ def test_pack_sources_are_well_formed():
         assert p["status"] in ("documented", "practitioner")
         if p["status"] == "documented":
             assert p.get("source", "").startswith("https://"), p["id"]
+
+
+def test_inspect_multiple_entities_in_one_call(runtime):
+    r = call(tools.inspect, runtime, contract="fixture:sap/business_partner_v2",
+             entity="A_BusinessPartnerAddress, A_BusinessPartnerRoleType, Nope")
+    assert set(r["entity_types"]) == {"A_BusinessPartnerAddressType", "A_BusinessPartnerRoleType"}
+    assert {s["name"] for s in r["entity_sets"]} == {"A_BusinessPartnerAddress", "A_BusinessPartnerRole"}
+    assert r["not_found"] == ["Nope"]

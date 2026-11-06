@@ -181,17 +181,29 @@ def inspect(args: dict[str, Any], rt: Runtime) -> str:
     }
 
     if focus:
-        match = [fq for fq in types if _short(fq) == focus or fq == focus]
-        if not match:
-            set_types = [es["entity_type"] for es in contract["entity_sets"] if es["name"] == focus]
-            match = [fq for fq in set_types if fq in types]
+        wanted = [f.strip() for f in focus.split(",") if f.strip()]
+        match, unknown = [], []
+        for name in wanted:
+            hits = [fq for fq in types if _short(fq) == name or fq == name]
+            if not hits:
+                hits = [es["entity_type"] for es in contract["entity_sets"]
+                        if es["name"] == name and es["entity_type"] in types]
+            if hits:
+                match += [h for h in hits if h not in match]
+            else:
+                unknown.append(name)
         if not match:
             return _err(f"no entity type or set named {focus!r}", run_id=run_id,
                         entity_types=[_short(t) for t in types])
         out["entity_types"] = {_short(fq): view_type(contract, fq) for fq in match}
+        focus_sets = set(wanted) | {_short(fq) for fq in match}
+        out["entity_sets"] = [s for s in out["entity_sets"] if s["name"] in focus_sets or s["type"] in focus_sets]
+        if unknown:
+            out["not_found"] = unknown
     elif len(types) > OVERVIEW_TYPE_LIMIT:
         out["entity_types"] = sorted(_short(t) for t in types)
-        out["hint"] = f"{len(types)} entity types: call again with entity=<name> to see one in detail."
+        out["hint"] = (f"{len(types)} entity types: call again with entity=<name1,name2,...> to see the ones "
+                       "you need in detail, in a single call.")
     else:
         out["entity_types"] = {_short(fq): view_type(contract, fq) for fq in types}
 

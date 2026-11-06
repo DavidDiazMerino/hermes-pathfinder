@@ -1,0 +1,102 @@
+{
+ "stamp": "20261106-112418",
+ "prompt": "I work with SAP. service_metadata.xml in this folder is the $metadata of an SAP OData service.\nFor every entity set, tell me: its key properties; whether create, update and delete are allowed;\nthe properties a create request must carry (Nullable=false and not set by the server; list them even\nif the set itself does not allow create); and its navigation properties with target entity type and\nwhether they are to-many.{scope} Do not create or modify any skills.\n\nEnd your answer with exactly one fenced ```json block in this shape:\n{\"entity_sets\": {\"<EntitySetName>\": {\"keys\": [\"...\"], \"create\": true, \"update\": true, \"delete\": true,\n \"required_on_create\": [\"...\"], \"navigations\": {\"<NavName>\": {\"target\": \"<EntityTypeName>\", \"many\": true}}}}}",
+ "seed": 7,
+ "conditions": {
+  "A": "pathfinder-baseline",
+  "C": "pathfinder"
+ },
+ "summary": [
+  {
+   "condition": "C",
+   "contract": "large_v4",
+   "runs": 3,
+   "score_mean": 1.0,
+   "perfect_runs": 3,
+   "tokens_mean": 121979.7,
+   "wall_s_mean": 119.5,
+   "tool_calls_mean": 6.3
+  }
+ ],
+ "runs": [
+  {
+   "condition": "C",
+   "contract": "large_v4",
+   "run": 1,
+   "exit": 0,
+   "wall_s": 135.3,
+   "infra_error": false,
+   "retries": 0,
+   "duration_ms": 129266,
+   "tokens": 122298,
+   "tool_calls": 6,
+   "tools": [
+    "tool_describe",
+    "skill_view",
+    "skill_view",
+    "skill_view",
+    "pathfinder_inspect",
+    "pathfinder_lab"
+   ],
+   "used_pathfinder": true,
+   "points": 36,
+   "total": 36,
+   "ratio": 1.0,
+   "parsed": true,
+   "errors": []
+  },
+  {
+   "condition": "C",
+   "contract": "large_v4",
+   "run": 2,
+   "exit": 0,
+   "wall_s": 119.7,
+   "infra_error": false,
+   "retries": 1,
+   "duration_ms": 119170,
+   "tokens": 125201,
+   "tool_calls": 7,
+   "tools": [
+    "tool_describe",
+    "skill_view",
+    "skill_view",
+    "tool_describe",
+    "pathfinder_inspect",
+    "pathfinder_sources",
+    "pathfinder_lab"
+   ],
+   "used_pathfinder": true,
+   "points": 36,
+   "total": 36,
+   "ratio": 1.0,
+   "parsed": true,
+   "errors": []
+  },
+  {
+   "condition": "C",
+   "contract": "large_v4",
+   "run": 3,
+   "exit": 0,
+   "wall_s": 103.6,
+   "infra_error": false,
+   "retries": 1,
+   "duration_ms": 103066,
+   "tokens": 118440,
+   "tool_calls": 6,
+   "tools": [
+    "tool_describe",
+    "skill_view",
+    "skill_view",
+    "pathfinder_inspect",
+    "tool_describe",
+    "pathfinder_lab"
+   ],
+   "used_pathfinder": true,
+   "points": 36,
+   "total": 36,
+   "ratio": 1.0,
+   "parsed": true,
+   "errors": []
+  }
+ ]
+}

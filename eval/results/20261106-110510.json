@@ -1,0 +1,305 @@
+{
+ "stamp": "20261106-110510",
+ "prompt": "I work with SAP. service_metadata.xml in this folder is the $metadata of an SAP OData service.\nFor every entity set, tell me: its key properties; whether create, update and delete are allowed;\nthe properties a create request must carry (Nullable=false and not set by the server; list them even\nif the set itself does not allow create); and its navigation properties with target entity type and\nwhether they are to-many. Do not create or modify any skills.\n\nEnd your answer with exactly one fenced ```json block in this shape:\n{\"entity_sets\": {\"<EntitySetName>\": {\"keys\": [\"...\"], \"create\": true, \"update\": true, \"delete\": true,\n \"required_on_create\": [\"...\"], \"navigations\": {\"<NavName>\": {\"target\": \"<EntityTypeName>\", \"many\": true}}}}}",
+ "conditions": {
+  "A": "pathfinder-baseline",
+  "C": "pathfinder"
+ },
+ "summary": [
+  {
+   "condition": "A",
+   "contract": "business_partner_v2",
+   "runs": 3,
+   "score_mean": 0.667,
+   "perfect_runs": 2,
+   "tokens_mean": 29530.3,
+   "wall_s_mean": 34.5,
+   "tool_calls_mean": 0.7
+  },
+  {
+   "condition": "A",
+   "contract": "product_v4",
+   "runs": 3,
+   "score_mean": 0.667,
+   "perfect_runs": 2,
+   "tokens_mean": 29116.7,
+   "wall_s_mean": 46.8,
+   "tool_calls_mean": 0.7
+  },
+  {
+   "condition": "C",
+   "contract": "business_partner_v2",
+   "runs": 3,
+   "score_mean": 0.667,
+   "perfect_runs": 2,
+   "tokens_mean": 76692.3,
+   "wall_s_mean": 49.3,
+   "tool_calls_mean": 4.3
+  },
+  {
+   "condition": "C",
+   "contract": "product_v4",
+   "runs": 3,
+   "score_mean": 0.667,
+   "perfect_runs": 2,
+   "tokens_mean": 72943.3,
+   "wall_s_mean": 53.6,
+   "tool_calls_mean": 5.3
+  }
+ ],
+ "runs": [
+  {
+   "condition": "A",
+   "contract": "business_partner_v2",
+   "run": 1,
+   "exit": 0,
+   "wall_s": 59.8,
+   "duration_ms": 53854,
+   "tokens": 44212,
+   "tool_calls": 1,
+   "tools": [
+    "read_file"
+   ],
+   "used_pathfinder": false,
+   "points": 18,
+   "total": 18,
+   "ratio": 1.0,
+   "parsed": true,
+   "errors": []
+  },
+  {
+   "condition": "C",
+   "contract": "business_partner_v2",
+   "run": 1,
+   "exit": 1,
+   "wall_s": 0.6,
+   "duration_ms": 63,
+   "tokens": 0,
+   "tool_calls": 0,
+   "tools": [],
+   "used_pathfinder": false,
+   "points": 0,
+   "total": 18,
+   "ratio": 0.0,
+   "parsed": false,
+   "errors": [
+    "no JSON answer found"
+   ]
+  },
+  {
+   "condition": "A",
+   "contract": "product_v4",
+   "run": 1,
+   "exit": 1,
+   "wall_s": 0.5,
+   "duration_ms": 61,
+   "tokens": 0,
+   "tool_calls": 0,
+   "tools": [],
+   "used_pathfinder": false,
+   "points": 0,
+   "total": 18,
+   "ratio": 0.0,
+   "parsed": false,
+   "errors": [
+    "no JSON answer found"
+   ]
+  },
+  {
+   "condition": "C",
+   "contract": "product_v4",
+   "run": 1,
+   "exit": 1,
+   "wall_s": 0.5,
+   "duration_ms": 60,
+   "tokens": 0,
+   "tool_calls": 0,
+   "tools": [],
+   "used_pathfinder": false,
+   "points": 0,
+   "total": 18,
+   "ratio": 0.0,
+   "parsed": false,
+   "errors": [
+    "no JSON answer found"
+   ]
+  },
+  {
+   "condition": "A",
+   "contract": "business_partner_v2",
+   "run": 2,
+   "exit": 1,
+   "wall_s": 0.5,
+   "duration_ms": 57,
+   "tokens": 0,
+   "tool_calls": 0,
+   "tools": [],
+   "used_pathfinder": false,
+   "points": 0,
+   "total": 18,
+   "ratio": 0.0,
+   "parsed": false,
+   "errors": [
+    "no JSON answer found"
+   ]
+  },
+  {
+   "condition": "C",
+   "contract": "business_partner_v2",
+   "run": 2,
+   "exit": 0,
+   "wall_s": 79.0,
+   "duration_ms": 75578,
+   "tokens": 125328,
+   "tool_calls": 6,
+   "tools": [
+    "tool_describe",
+    "read_file",
+    "pathfinder_inspect",
+    "skill_view",
+    "tool_describe",
+    "pathfinder_lab"
+   ],
+   "used_pathfinder": true,
+   "points": 18,
+   "total": 18,
+   "ratio": 1.0,
+   "parsed": true,
+   "errors": []
+  },
+  {
+   "condition": "A",
+   "contract": "product_v4",
+   "run": 2,
+   "exit": 0,
+   "wall_s": 50.7,
+   "duration_ms": 44765,
+   "tokens": 43577,
+   "tool_calls": 1,
+   "tools": [
+    "read_file"
+   ],
+   "used_pathfinder": false,
+   "points": 18,
+   "total": 18,
+   "ratio": 1.0,
+   "parsed": true,
+   "errors": []
+  },
+  {
+   "condition": "C",
+   "contract": "product_v4",
+   "run": 2,
+   "exit": 0,
+   "wall_s": 85.5,
+   "duration_ms": 79594,
+   "tokens": 107771,
+   "tool_calls": 8,
+   "tools": [
+    "tool_describe",
+    "skill_view",
+    "read_file",
+    "pathfinder_inspect",
+    "tool_describe",
+    "read_file",
+    "pathfinder_sources",
+    "pathfinder_lab"
+   ],
+   "used_pathfinder": true,
+   "points": 18,
+   "total": 18,
+   "ratio": 1.0,
+   "parsed": true,
+   "errors": []
+  },
+  {
+   "condition": "A",
+   "contract": "business_partner_v2",
+   "run": 3,
+   "exit": 0,
+   "wall_s": 43.1,
+   "duration_ms": 37241,
+   "tokens": 44379,
+   "tool_calls": 1,
+   "tools": [
+    "read_file"
+   ],
+   "used_pathfinder": false,
+   "points": 18,
+   "total": 18,
+   "ratio": 1.0,
+   "parsed": true,
+   "errors": []
+  },
+  {
+   "condition": "C",
+   "contract": "business_partner_v2",
+   "run": 3,
+   "exit": 0,
+   "wall_s": 68.2,
+   "duration_ms": 62240,
+   "tokens": 104749,
+   "tool_calls": 7,
+   "tools": [
+    "skill_view",
+    "skill_view",
+    "tool_describe",
+    "tool_describe",
+    "pathfinder_inspect",
+    "pathfinder_sources",
+    "pathfinder_lab"
+   ],
+   "used_pathfinder": true,
+   "points": 18,
+   "total": 18,
+   "ratio": 1.0,
+   "parsed": true,
+   "errors": []
+  },
+  {
+   "condition": "A",
+   "contract": "product_v4",
+   "run": 3,
+   "exit": 0,
+   "wall_s": 89.3,
+   "duration_ms": 83481,
+   "tokens": 43773,
+   "tool_calls": 1,
+   "tools": [
+    "read_file"
+   ],
+   "used_pathfinder": false,
+   "points": 18,
+   "total": 18,
+   "ratio": 1.0,
+   "parsed": true,
+   "errors": []
+  },
+  {
+   "condition": "C",
+   "contract": "product_v4",
+   "run": 3,
+   "exit": 0,
+   "wall_s": 74.7,
+   "duration_ms": 68721,
+   "tokens": 111059,
+   "tool_calls": 8,
+   "tools": [
+    "tool_describe",
+    "skill_view",
+    "skill_view",
+    "read_file",
+    "tool_describe",
+    "pathfinder_inspect",
+    "pathfinder_sources",
+    "pathfinder_lab"
+   ],
+   "used_pathfinder": true,
+   "points": 18,
+   "total": 18,
+   "ratio": 1.0,
+   "parsed": true,
+   "errors": []
+  }
+ ]
+}

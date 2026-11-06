@@ -62,7 +62,7 @@ INSPECT = {
             },
             "entity": {
                 "type": "string",
-                "description": "Optional entity type or entity set name to show in detail (use for large services).",
+                "description": "Optional: entity type or entity set names to show in detail, comma-separated (e.g. 'A_BusinessPartner,A_BusinessPartnerAddress'). Use it for large services; ask for all the ones you need in one call.",
             },
         },
         "required": ["contract"],
