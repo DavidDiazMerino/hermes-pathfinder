@@ -55,7 +55,8 @@ def sources(args: dict[str, Any], rt: Runtime) -> str:
             "recipes": recipes,
             "no_recipe": not recipes,
             "next": ("Read the official locations listed (web_extract for pages, pathfinder_read for large "
-                     "JSON or text documents) and cite the source_id each read returns."
+                     "JSON or text documents) and cite the source_id each read returns. Put the "
+                     "ask_before_starting questions to the user: a newcomer does not know to ask them."
                      if recipes else
                      "No recipe yet. Search official sites first (site:help.sap.com, site:api.sap.com, "
                      "site:userapps.support.sap.com, github.com/SAP). If you find where this is documented, "

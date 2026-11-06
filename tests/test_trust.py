@@ -161,3 +161,11 @@ def test_gate_refuses_community_only_evidence(runtime):
     d = gate.evaluate({"operations": [{"action": "create", "name": "sap-tip", "content": content}]},
                       runtime.ledger(), mode="strict", keywords=PACK["gate_keywords"])
     assert not d["allow"] and "weak-source" in d["message"]
+
+
+def test_recipes_carry_questions_to_settle(runtime):
+    out = json.loads(tools.sources({"domain": "sap", "question":
+                                    "Integration Suite: replicate employees from SuccessFactors to another system"}, runtime))
+    rec = next(r for r in out["recipes"] if r["id"] == "sf-integration-option")
+    asks = " ".join(rec["ask_before_starting"])
+    assert "data center" in asks and "permissions" in asks and "SAML" in asks

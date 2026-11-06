@@ -768,6 +768,10 @@
         "Transactions are not listed; map a transaction to its business object first.",
         "An object missing from a file is not classified there; say so instead of guessing.",
         "Use the file for the user's edition and release."
+      ],
+      "ask": [
+        "Which edition and release is the target (Public Edition, Private Edition release, BTP ABAP)?",
+        "Is the code meant to run on-stack (ABAP Cloud) or side-by-side?"
       ]
     },
     {
@@ -797,6 +801,9 @@
       "caveats": [
         "The same API name can differ between editions.",
         "A deprecated API keeps working for a while; recommend the successor for new work."
+      ],
+      "ask": [
+        "Which product, edition and release? Is this for new work or an existing integration?"
       ]
     },
     {
@@ -830,6 +837,10 @@
       "caveats": [
         "Without date parameters queries return records valid today, so future-dated hires are missed.",
         "Check the guide's release against the tenant's release."
+      ],
+      "ask": [
+        "Which release is the tenant on? Compare it with the release of the guide you read.",
+        "Are future-dated or historical records needed? Then date parameters are required."
       ]
     },
     {
@@ -863,6 +874,14 @@
       "how": "Settle direction, volume, read or write, delta needs and whether SAP ships standard content; then compare the options using these documents.",
       "caveats": [
         "Look for prepackaged content on the Hub before building."
+      ],
+      "ask": [
+        "Which data center hosts the tenant? It decides the API host (see the API servers list).",
+        "Who provides the technical user, and does it have the role-based permissions (RBP) for the entities needed?",
+        "Which authentication will be used? OAuth 2.0 SAML Bearer is the documented option; check whether Basic authentication is still allowed for this tenant.",
+        "Does the company use Onboarding? Pending hires exist before the hire is completed.",
+        "Must future-dated hires be sent when HR records them or on their start date?",
+        "What interface and fields does the target system accept?"
       ]
     },
     {
@@ -886,6 +905,9 @@
       "how": "Find the tenant's data center, then its production or preview API host.",
       "caveats": [
         "Hostnames change with data center migrations; use the current list."
+      ],
+      "ask": [
+        "Production or preview (test) tenant?"
       ]
     },
     {
@@ -918,6 +940,9 @@
       "how": "Quote the policy section that applies and name the SAP-documented governed path.",
       "caveats": [
         "The policy is a contract matter; the system owner decides."
+      ],
+      "ask": [
+        "Who owns the SAP system and has approved the access path?"
       ]
     },
     {
@@ -946,6 +971,10 @@
       "how": "Find the scenario id (SAP_COM_xxxx) on the API page, then follow the communication management steps.",
       "caveats": [
         "Public Edition only; on-premise uses Gateway service activation."
+      ],
+      "ask": [
+        "Public Edition or on-premise/Private Edition?",
+        "Inbound, outbound or both?"
       ]
     },
     {
@@ -973,6 +1002,9 @@
       "how": "Use the PAM for availability and maintenance dates and the Road Map Explorer for planned features.",
       "caveats": [
         "Roadmap items are plans, not commitments."
+      ],
+      "ask": [
+        "Which exact product version is installed today?"
       ]
     }
   ]

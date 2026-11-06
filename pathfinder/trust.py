@@ -64,6 +64,7 @@ def match_recipes(question: str, pack: dict[str, Any], limit: int = 3) -> list[d
                 where.append({"what": s["label"], "url": s["url"], "check": s.get("check")})
             else:
                 where.append({"what": w.get("what"), "url": w.get("url")})
-        out.append({"id": recipe["id"], "question": recipe["question"], "matched": hits, "where": where,
+        out.append({"id": recipe["id"], "question": recipe["question"], "matched": hits,
+                    "ask_before_starting": recipe.get("ask", []), "where": where,
                     "how": recipe.get("how"), "caveats": recipe.get("caveats", [])})
     return out

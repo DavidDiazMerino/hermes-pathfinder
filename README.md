@@ -35,6 +35,8 @@ with unrestricted shell access running as your user could still work around it.
 
 ## Does it help?
 
+Two real sessions, a PM expert and a SuccessFactors newcomer, are written up in [docs/scenarios.md](docs/scenarios.md).
+
 Measured with real Hermes sessions, same model with and without the plugin ([docs/eval.md](docs/eval.md)):
 accuracy was equal (all runs correct in both conditions); on a realistically sized contract
 (500 KB, 48 entity types) the plugin used about 51% fewer tokens and 34% less time, and every answer
