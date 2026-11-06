@@ -1,0 +1,197 @@
+{
+ "stamp": "20261106-132312",
+ "suffix": "\n\nAnswer concisely. Say what you are not sure about, and cite the sources you relied on (with URLs).",
+ "traps": [
+  {
+   "id": "maint-order-api",
+   "question": "We are building a new side-by-side integration with SAP S/4HANA Cloud Public Edition 2608 that creates maintenance orders. Which published OData API should we use? Give its technical name.",
+   "checks": [
+    [
+     "names the current version 2 API",
+     "API_MAINTENANCEORDER(?:_0*2\\b|\\s*;\\s*v\\s*=\\s*2)|Maintenance Order \\(Version 2\\)"
+    ],
+    [
+     "says the original version is deprecated",
+     "deprecat|obsolete|superseded|successor"
+    ]
+   ],
+   "verified_in": "SAP Help Portal, Maintenance Order (Deprecated) and Maintenance Order (Version 2) pages"
+  },
+  {
+   "id": "sf-future-hires",
+   "question": "Our SAP Cloud Integration iFlow queries EmpJob from the SuccessFactors OData API every day with only a $filter on startDate to pick up new hires, but hires that start next month never show up. Why, and how do we fix it?",
+   "checks": [
+    [
+     "explains effective dating / default as-of today",
+     "asOfDate|as-of|effective[- ]dat|today"
+    ],
+    [
+     "uses fromDate/toDate",
+     "fromDate|toDate"
+    ]
+   ],
+   "verified_in": "SAP SuccessFactors API Reference Guide (OData V2): asOfDate and fromDate/toDate queries; KBA 2148752"
+  }
+ ],
+ "models": [
+  "openai/gpt-6-luna"
+ ],
+ "summary": [
+  {
+   "model": "openai/gpt-6-luna",
+   "condition": "A",
+   "runs": 2,
+   "correct": 1,
+   "checks": "3/4",
+   "cites_official": 2,
+   "used_pathfinder": 0,
+   "cost_usd": 0.019,
+   "wall_s_mean": 86.9
+  },
+  {
+   "model": "openai/gpt-6-luna",
+   "condition": "C",
+   "runs": 2,
+   "correct": 1,
+   "checks": "3/4",
+   "cites_official": 2,
+   "used_pathfinder": 0,
+   "cost_usd": 0.0143,
+   "wall_s_mean": 53.0
+  }
+ ],
+ "runs": [
+  {
+   "model": "openai/gpt-6-luna",
+   "condition": "A",
+   "trap": "maint-order-api",
+   "run": 1,
+   "exit": 0,
+   "error": null,
+   "wall_s": 126.1,
+   "retries": 0,
+   "infra_error": false,
+   "tokens": 574558,
+   "cost_usd": 0.01428,
+   "tool_calls": 14,
+   "tools": [
+    "web_search",
+    "web_search",
+    "web_search",
+    "web_extract",
+    "web_search",
+    "web_extract",
+    "web_search",
+    "web_search",
+    "web_search",
+    "web_search",
+    "read_file",
+    "web_search",
+    "web_search",
+    "web_search"
+   ],
+   "used_pathfinder": false,
+   "web_calls": 13,
+   "correct": false,
+   "checks_passed": 1,
+   "checks_total": 2,
+   "failed_checks": [
+    "says the original version is deprecated"
+   ],
+   "cites_official": true,
+   "answered": true
+  },
+  {
+   "model": "openai/gpt-6-luna",
+   "condition": "C",
+   "trap": "maint-order-api",
+   "run": 1,
+   "exit": 0,
+   "error": null,
+   "wall_s": 64.3,
+   "retries": 1,
+   "infra_error": false,
+   "tokens": 306360,
+   "cost_usd": 0.00954,
+   "tool_calls": 9,
+   "tools": [
+    "web_search",
+    "web_search",
+    "web_search",
+    "web_search",
+    "web_extract",
+    "web_search",
+    "web_search",
+    "web_search",
+    "web_extract"
+   ],
+   "used_pathfinder": false,
+   "web_calls": 9,
+   "correct": false,
+   "checks_passed": 1,
+   "checks_total": 2,
+   "failed_checks": [
+    "says the original version is deprecated"
+   ],
+   "cites_official": true,
+   "answered": true
+  },
+  {
+   "model": "openai/gpt-6-luna",
+   "condition": "A",
+   "trap": "sf-future-hires",
+   "run": 1,
+   "exit": 0,
+   "error": null,
+   "wall_s": 47.8,
+   "retries": 1,
+   "infra_error": false,
+   "tokens": 83397,
+   "cost_usd": 0.0047,
+   "tool_calls": 5,
+   "tools": [
+    "web_search",
+    "web_extract",
+    "web_search",
+    "web_extract",
+    "web_search"
+   ],
+   "used_pathfinder": false,
+   "web_calls": 5,
+   "correct": true,
+   "checks_passed": 2,
+   "checks_total": 2,
+   "failed_checks": [],
+   "cites_official": true,
+   "answered": true
+  },
+  {
+   "model": "openai/gpt-6-luna",
+   "condition": "C",
+   "trap": "sf-future-hires",
+   "run": 1,
+   "exit": 0,
+   "error": null,
+   "wall_s": 41.8,
+   "retries": 1,
+   "infra_error": false,
+   "tokens": 69736,
+   "cost_usd": 0.00481,
+   "tool_calls": 4,
+   "tools": [
+    "web_search",
+    "web_search",
+    "web_search",
+    "web_extract"
+   ],
+   "used_pathfinder": false,
+   "web_calls": 4,
+   "correct": true,
+   "checks_passed": 2,
+   "checks_total": 2,
+   "failed_checks": [],
+   "cites_official": true,
+   "answered": true
+  }
+ ]
+}
