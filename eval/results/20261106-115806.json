@@ -1,0 +1,114 @@
+{
+ "stamp": "20261106-115806",
+ "prompt": "I work with SAP. service_metadata.xml in this folder is the $metadata of an SAP OData service.\nFor every entity set, tell me: its key properties; whether create, update and delete are allowed;\nthe properties a create request must carry (Nullable=false and not set by the server; list them even\nif the set itself does not allow create); and its navigation properties with target entity type and\nwhether they are to-many.{scope} Do not create or modify any skills.\n\nEnd your answer with exactly one fenced ```json block in this shape:\n{\"entity_sets\": {\"<EntitySetName>\": {\"keys\": [\"...\"], \"create\": true, \"update\": true, \"delete\": true,\n \"required_on_create\": [\"...\"], \"navigations\": {\"<NavName>\": {\"target\": \"<EntityTypeName>\", \"many\": true}}}}}",
+ "seed": 7,
+ "conditions": {
+  "A": "pathfinder-baseline",
+  "C": "pathfinder"
+ },
+ "models": [
+  "openai/gpt-6-luna"
+ ],
+ "summary": [
+  {
+   "model": "openai/gpt-6-luna",
+   "condition": "A",
+   "contract": "product_v4",
+   "runs": 1,
+   "score_mean": 1.0,
+   "perfect_runs": 1,
+   "answered_runs": 1,
+   "tokens_mean": 36877,
+   "cost_usd_mean": 0.003,
+   "wall_s_mean": 14.2,
+   "tool_calls_mean": 1.0,
+   "used_pathfinder_runs": 0
+  },
+  {
+   "model": "openai/gpt-6-luna",
+   "condition": "C",
+   "contract": "product_v4",
+   "runs": 1,
+   "score_mean": 1.0,
+   "perfect_runs": 1,
+   "answered_runs": 1,
+   "tokens_mean": 128620,
+   "cost_usd_mean": 0.0049,
+   "wall_s_mean": 37.0,
+   "tool_calls_mean": 7.0,
+   "used_pathfinder_runs": 1
+  }
+ ],
+ "runs": [
+  {
+   "model": "openai/gpt-6-luna",
+   "served_model": "openai/gpt-6-luna",
+   "condition": "A",
+   "contract": "product_v4",
+   "run": 1,
+   "exit": 0,
+   "error": null,
+   "wall_s": 14.2,
+   "infra_error": false,
+   "retries": 1,
+   "duration_ms": 13653,
+   "tokens": 36877,
+   "token_detail": {
+    "input": 35930,
+    "output": 947,
+    "total": 36877,
+    "cache_read": 17091,
+    "cache_write": 18833
+   },
+   "cost_usd": 0.003,
+   "tool_calls": 1,
+   "tools": [
+    "read_file"
+   ],
+   "used_pathfinder": false,
+   "points": 18,
+   "total": 18,
+   "ratio": 1.0,
+   "parsed": true,
+   "errors": []
+  },
+  {
+   "model": "openai/gpt-6-luna",
+   "served_model": "openai/gpt-6-luna",
+   "condition": "C",
+   "contract": "product_v4",
+   "run": 1,
+   "exit": 0,
+   "error": null,
+   "wall_s": 37.0,
+   "infra_error": false,
+   "retries": 0,
+   "duration_ms": 30818,
+   "tokens": 128620,
+   "token_detail": {
+    "input": 127071,
+    "output": 1549,
+    "total": 128620,
+    "cache_read": 102679,
+    "cache_write": 24374
+   },
+   "cost_usd": 0.00485,
+   "tool_calls": 7,
+   "tools": [
+    "search_files",
+    "skill_view",
+    "read_file",
+    "tool_search",
+    "tool_describe",
+    "pathfinder_inspect",
+    "pathfinder_lab"
+   ],
+   "used_pathfinder": true,
+   "points": 18,
+   "total": 18,
+   "ratio": 1.0,
+   "parsed": true,
+   "errors": []
+  }
+ ]
+}

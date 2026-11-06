@@ -57,3 +57,47 @@ Run on 2026-11-06 with Hermes v0.23.0, model `google/gemini-4-argon` (Nous provi
 
 Raw per-run data: `eval/results/*.json` (the first file's built-in summary predates the
 infrastructure-error filter; the table above recomputes it from valid runs only).
+
+## Cheaper models (second round)
+
+Same setup with four cheaper models from Nous Portal, the same model in both conditions, the three
+contracts, 3 runs each: 72 sessions, about $3.39 in total at the endpoint's published prices.
+Result file: `eval/results/20261106-115900.json`.
+
+| Model | Condition | Checks correct | Perfect runs | Cost (9 runs) | Tokens (9 runs) | Used the plugin |
+|---|---|---|---|---|---|---|
+| GPT-6 Luna | A, no plugin | 216/216 | 9/9 | $0.059 | 1.26 M | – |
+| GPT-6 Luna | C, plugin | 215/216 | 8/9 | $0.059 | 1.39 M | 4/9 runs |
+| GPT-6.1 Terra | A | 216/216 | 9/9 | $0.460 | 1.08 M | – |
+| GPT-6.1 Terra | C | 216/216 | 9/9 | $0.411 | 0.90 M | 9/9 |
+| Gemini 3.8 Flash | A | 216/216 | 9/9 | $1.284 | 4.71 M | – |
+| Gemini 3.8 Flash | C | 216/216 | 9/9 | $0.940 | 3.01 M | 9/9 |
+| GLM 5.3 Flash | A | 194/216 | 7/9 | $0.070 | 1.83 M | – |
+| GLM 5.3 Flash | C | 197/216 | 7/9 | $0.103 | 2.70 M | 8/9 |
+
+Large contract only (mean per run):
+
+| Model | Cost A → C | Tokens A → C | Time A → C |
+|---|---|---|---|
+| GPT-6 Luna | $0.0134 → $0.0112 | 334 k → 278 k | 57 s → 45 s |
+| GPT-6.1 Terra | $0.0764 → $0.0527 (−31%) | 197 k → 107 k | 50 s → 42 s |
+| Gemini 3.8 Flash | $0.2865 → $0.1984 (−31%) | 1.21 M → 0.74 M | 190 s → 167 s |
+| GLM 5.3 Flash | $0.0159 → $0.0198 (+25%) | 444 k → 586 k | 118 s → 137 s |
+
+What this round adds:
+
+- **Accuracy is still essentially equal.** Current cheap models read OData metadata well. The one
+  failure of the kind the plugin targets appeared once: GLM without the plugin missed four
+  restrictions declared in external `<Annotations>` blocks (32/36); with the plugin it missed one
+  (35/36), copying a value wrongly from the inspector's output. Two GLM runs returned no JSON in
+  both conditions (format, not understanding). Luna with the plugin once left a key out of the
+  required fields.
+- **Cost on the large contract fell about 31% for Terra and Gemini Flash**, less for Luna (which
+  mostly did not use the plugin), and rose for GLM, driven by one run that looped through 32 tool
+  calls.
+- **Weaker models do not always pick up the tools.** Luna used Pathfinder in 4 of 9 runs even
+  with the plugin enabled; Gemini Flash without the plugin wrote and ran its own XML-parsing
+  scripts. Tool discoverability matters as much as the tools.
+- What this benchmark does not measure: the evidence trail, the skill gate, and the SAP source map
+  (editions, released APIs, communication arrangements, API policy). Those need their own
+  evaluation.
