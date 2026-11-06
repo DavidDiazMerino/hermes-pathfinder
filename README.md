@@ -25,7 +25,6 @@ Its first domain pack covers **SAP** (OData V2 and V4 contracts).
 | Evidence ledger | Every inspection is stored with the file's SHA-256 and a `run_id` the agent cites. |
 | `enterprise-pathfinder:method` skill | The working method: orient, inspect, answer with provenance, then learn. |
 | `/pathfinder` | `/pathfinder <task>` starts a mission; `/pathfinder status` lists runs, their evidence status and the skills they back. |
-
 | `pathfinder_lab` | Tests the agent's own claims about a contract (keys, operations, navigations, required fields, payloads it expects to be accepted or refused). A run is `verified` only when its latest lab passed with at least one claim. |
 | Evidence gate | A `pre_tool_call` hook on `skill_manage`: an SAP-domain skill can be created only if it cites a verified run, and changed only with a newly verified run. Invented or failed run_ids are refused. The ledger and the skills folder are also guarded against writes that bypass the gate. Setting: `gate_mode` = `strict` (default), `declared` or `off`. |
 
