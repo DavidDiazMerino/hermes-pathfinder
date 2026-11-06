@@ -1,0 +1,15 @@
+name: enterprise-pathfinder
+version: 0.1.0
+manifest_version: 2
+description: >-
+  Map, contract inspector and evidence ledger that help Hermes work safely in enterprise
+  software domains. First pack: SAP (OData V2/V4). Offline by default.
+author: David Díaz Merino
+license: MIT
+homepage: https://github.com/DavidDiazMerino/hermes-pathfinder
+tags: [sap, odata, enterprise, integration, skills]
+requires_hermes: ">=0.23.0"
+provides_tools:
+  - pathfinder_sources
+  - pathfinder_inspect
+provides_hooks: []

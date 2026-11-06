@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  SYNTHETIC FIXTURE - written from scratch for Hermes Pathfinder.
+  Modelled on the public OASIS OData V4 CSDL format and the public
+  Org.OData.Core.V1 / Org.OData.Capabilities.V1 vocabularies.
+  It is NOT the metadata of any real SAP service and must not be used as a
+  reference for one. License: same as this repository.
+-->
+<edmx:Edmx Version="4.0" xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx">
+  <edmx:Reference Uri="https://oasis-tcs.github.io/odata-vocabularies/vocabularies/Org.OData.Core.V1.xml">
+    <edmx:Include Namespace="Org.OData.Core.V1" Alias="Core"/>
+  </edmx:Reference>
+  <edmx:Reference Uri="https://oasis-tcs.github.io/odata-vocabularies/vocabularies/Org.OData.Capabilities.V1.xml">
+    <edmx:Include Namespace="Org.OData.Capabilities.V1" Alias="Capabilities"/>
+  </edmx:Reference>
+  <edmx:Reference Uri="https://sap.github.io/odata-vocabularies/vocabularies/Common.xml">
+    <edmx:Include Namespace="com.sap.vocabularies.Common.v1" Alias="Common"/>
+  </edmx:Reference>
+  <edmx:DataServices>
+    <Schema Namespace="pathfinder.sample.product.v0001" Alias="SAMPLE" xmlns="http://docs.oasis-open.org/odata/ns/edm">
+
+      <EntityType Name="ProductType">
+        <Key>
+          <PropertyRef Name="Product"/>
+        </Key>
+        <Property Name="Product" Type="Edm.String" Nullable="false" MaxLength="40">
+          <Annotation Term="Common.Label" String="Product"/>
+        </Property>
+        <Property Name="ProductType" Type="Edm.String" Nullable="false" MaxLength="4">
+          <Annotation Term="Common.Label" String="Product Type"/>
+        </Property>
+        <Property Name="BaseUnit" Type="Edm.String" Nullable="false" MaxLength="3">
+          <Annotation Term="Common.Label" String="Base Unit of Measure"/>
+        </Property>
+        <Property Name="GrossWeight" Type="Edm.Decimal" Precision="13" Scale="3">
+          <Annotation Term="Common.Label" String="Gross Weight"/>
+        </Property>
+        <Property Name="IsMarkedForDeletion" Type="Edm.Boolean"/>
+        <Property Name="CreationDateTime" Type="Edm.DateTimeOffset" Precision="7">
+          <Annotation Term="Core.Computed"/>
+          <Annotation Term="Common.Label" String="Created On"/>
+        </Property>
+        <Property Name="LastChangeDateTime" Type="Edm.DateTimeOffset" Precision="7">
+          <Annotation Term="Core.Computed"/>
+        </Property>
+        <NavigationProperty Name="_ProductDescription" Type="Collection(SAMPLE.ProductDescriptionType)" Partner="_Product"/>
+        <NavigationProperty Name="_ProductPlant" Type="Collection(SAMPLE.ProductPlantType)" Partner="_Product"/>
+      </EntityType>
+
+      <EntityType Name="ProductDescriptionType">
+        <Key>
+          <PropertyRef Name="Product"/>
+          <PropertyRef Name="Language"/>
+        </Key>
+        <Property Name="Product" Type="Edm.String" Nullable="false" MaxLength="40"/>
+        <Property Name="Language" Type="Edm.String" Nullable="false" MaxLength="2"/>
+        <Property Name="ProductDescription" Type="Edm.String" Nullable="false" MaxLength="40"/>
+        <NavigationProperty Name="_Product" Type="SAMPLE.ProductType" Nullable="false" Partner="_ProductDescription"/>
+      </EntityType>
+
+      <EntityType Name="ProductPlantType">
+        <Key>
+          <PropertyRef Name="Product"/>
+          <PropertyRef Name="Plant"/>
+        </Key>
+        <Property Name="Product" Type="Edm.String" Nullable="false" MaxLength="40">
+          <Annotation Term="Core.Immutable"/>
+        </Property>
+        <Property Name="Plant" Type="Edm.String" Nullable="false" MaxLength="4">
+          <Annotation Term="Core.Immutable"/>
+        </Property>
+        <Property Name="ProfitCenter" Type="Edm.String" MaxLength="10"/>
+        <Property Name="MRPType" Type="Edm.String" MaxLength="2"/>
+        <NavigationProperty Name="_Product" Type="SAMPLE.ProductType" Nullable="false" Partner="_ProductPlant"/>
+      </EntityType>
+
+      <EntityContainer Name="Container">
+        <EntitySet Name="Product" EntityType="SAMPLE.ProductType">
+          <NavigationPropertyBinding Path="_ProductDescription" Target="ProductDescription"/>
+          <NavigationPropertyBinding Path="_ProductPlant" Target="ProductPlant"/>
+          <Annotation Term="Capabilities.DeleteRestrictions">
+            <Record>
+              <PropertyValue Property="Deletable" Bool="false"/>
+            </Record>
+          </Annotation>
+        </EntitySet>
+        <EntitySet Name="ProductDescription" EntityType="SAMPLE.ProductDescriptionType">
+          <NavigationPropertyBinding Path="_Product" Target="Product"/>
+        </EntitySet>
+        <EntitySet Name="ProductPlant" EntityType="SAMPLE.ProductPlantType">
+          <NavigationPropertyBinding Path="_Product" Target="Product"/>
+        </EntitySet>
+      </EntityContainer>
+
+      <Annotations Target="SAMPLE.Container/ProductPlant">
+        <Annotation Term="Capabilities.InsertRestrictions">
+          <Record>
+            <PropertyValue Property="Insertable" Bool="false"/>
+          </Record>
+        </Annotation>
+        <Annotation Term="Capabilities.DeleteRestrictions">
+          <Record>
+            <PropertyValue Property="Deletable" Bool="false"/>
+          </Record>
+        </Annotation>
+      </Annotations>
+    </Schema>
+  </edmx:DataServices>
+</edmx:Edmx>

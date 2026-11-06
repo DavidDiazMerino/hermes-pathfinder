@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  SYNTHETIC FIXTURE - written from scratch for Hermes Pathfinder.
+  Modelled on the public OData V2 CSDL format and the publicly documented
+  SAP OData V2 annotation attributes (sap:creatable, sap:label, ...).
+  It is NOT the metadata of any real SAP service and must not be used as a
+  reference for one. License: same as this repository.
+-->
+<edmx:Edmx Version="1.0"
+    xmlns:edmx="http://schemas.microsoft.com/ado/2007/06/edmx"
+    xmlns:m="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata"
+    xmlns:sap="http://www.sap.com/Protocols/SAPData">
+  <edmx:DataServices m:DataServiceVersion="2.0">
+    <Schema Namespace="PATHFINDER_SAMPLE_BP_SRV" xml:lang="en" sap:schema-version="1"
+        xmlns="http://schemas.microsoft.com/ado/2008/09/edm">
+
+      <EntityType Name="A_BusinessPartnerType" sap:label="Business Partner" sap:content-version="1">
+        <Key>
+          <PropertyRef Name="BusinessPartner"/>
+        </Key>
+        <Property Name="BusinessPartner" Type="Edm.String" Nullable="false" MaxLength="10" sap:label="Business Partner" sap:updatable="false"/>
+        <Property Name="BusinessPartnerCategory" Type="Edm.String" Nullable="false" MaxLength="1" sap:label="BP Category" sap:updatable="false"/>
+        <Property Name="BusinessPartnerGrouping" Type="Edm.String" MaxLength="4" sap:label="Grouping"/>
+        <Property Name="FirstName" Type="Edm.String" MaxLength="40" sap:label="First Name"/>
+        <Property Name="LastName" Type="Edm.String" MaxLength="40" sap:label="Last Name"/>
+        <Property Name="OrganizationBPName1" Type="Edm.String" MaxLength="40" sap:label="Name 1"/>
+        <Property Name="BusinessPartnerFullName" Type="Edm.String" MaxLength="81" sap:label="Full Name" sap:creatable="false" sap:updatable="false"/>
+        <Property Name="Language" Type="Edm.String" MaxLength="2" sap:label="Language"/>
+        <Property Name="IsMarkedForArchiving" Type="Edm.Boolean" sap:label="Archiving Flag"/>
+        <Property Name="CreationDate" Type="Edm.DateTime" Precision="0" sap:display-format="Date" sap:label="Created On" sap:creatable="false" sap:updatable="false"/>
+        <Property Name="CreatedByUser" Type="Edm.String" MaxLength="12" sap:label="Created By" sap:creatable="false" sap:updatable="false"/>
+        <NavigationProperty Name="to_BusinessPartnerAddress" Relationship="PATHFINDER_SAMPLE_BP_SRV.assoc_BP_Address" FromRole="FromRole_BP_Address" ToRole="ToRole_BP_Address"/>
+        <NavigationProperty Name="to_BusinessPartnerRole" Relationship="PATHFINDER_SAMPLE_BP_SRV.assoc_BP_Role" FromRole="FromRole_BP_Role" ToRole="ToRole_BP_Role"/>
+      </EntityType>
+
+      <EntityType Name="A_BusinessPartnerAddressType" sap:label="BP Address" sap:content-version="1">
+        <Key>
+          <PropertyRef Name="BusinessPartner"/>
+          <PropertyRef Name="AddressID"/>
+        </Key>
+        <Property Name="BusinessPartner" Type="Edm.String" Nullable="false" MaxLength="10" sap:label="Business Partner" sap:updatable="false"/>
+        <Property Name="AddressID" Type="Edm.String" Nullable="false" MaxLength="10" sap:label="Address Number" sap:creatable="false" sap:updatable="false"/>
+        <Property Name="StreetName" Type="Edm.String" MaxLength="60" sap:label="Street"/>
+        <Property Name="PostalCode" Type="Edm.String" MaxLength="10" sap:label="Postal Code"/>
+        <Property Name="CityName" Type="Edm.String" MaxLength="40" sap:label="City"/>
+        <Property Name="Country" Type="Edm.String" Nullable="false" MaxLength="3" sap:label="Country/Region"/>
+        <Property Name="ValidityStartDate" Type="Edm.DateTimeOffset" Precision="0" sap:label="Valid From"/>
+      </EntityType>
+
+      <EntityType Name="A_BusinessPartnerRoleType" sap:label="BP Role" sap:content-version="1">
+        <Key>
+          <PropertyRef Name="BusinessPartner"/>
+          <PropertyRef Name="BusinessPartnerRole"/>
+        </Key>
+        <Property Name="BusinessPartner" Type="Edm.String" Nullable="false" MaxLength="10" sap:label="Business Partner"/>
+        <Property Name="BusinessPartnerRole" Type="Edm.String" Nullable="false" MaxLength="6" sap:label="BP Role"/>
+        <Property Name="ValidFrom" Type="Edm.DateTimeOffset" Precision="0" sap:label="Valid From"/>
+        <Property Name="ValidTo" Type="Edm.DateTimeOffset" Precision="0" sap:label="Valid To"/>
+      </EntityType>
+
+      <Association Name="assoc_BP_Address" sap:content-version="1">
+        <End Type="PATHFINDER_SAMPLE_BP_SRV.A_BusinessPartnerType" Multiplicity="1" Role="FromRole_BP_Address"/>
+        <End Type="PATHFINDER_SAMPLE_BP_SRV.A_BusinessPartnerAddressType" Multiplicity="*" Role="ToRole_BP_Address"/>
+      </Association>
+      <Association Name="assoc_BP_Role" sap:content-version="1">
+        <End Type="PATHFINDER_SAMPLE_BP_SRV.A_BusinessPartnerType" Multiplicity="1" Role="FromRole_BP_Role"/>
+        <End Type="PATHFINDER_SAMPLE_BP_SRV.A_BusinessPartnerRoleType" Multiplicity="*" Role="ToRole_BP_Role"/>
+      </Association>
+
+      <EntityContainer Name="PATHFINDER_SAMPLE_BP_SRV_Entities" m:IsDefaultEntityContainer="true" sap:supported-formats="atom json xlsx">
+        <EntitySet Name="A_BusinessPartner" EntityType="PATHFINDER_SAMPLE_BP_SRV.A_BusinessPartnerType" sap:creatable="true" sap:updatable="true" sap:deletable="false" sap:content-version="1"/>
+        <EntitySet Name="A_BusinessPartnerAddress" EntityType="PATHFINDER_SAMPLE_BP_SRV.A_BusinessPartnerAddressType" sap:creatable="true" sap:updatable="true" sap:deletable="true" sap:content-version="1"/>
+        <EntitySet Name="A_BusinessPartnerRole" EntityType="PATHFINDER_SAMPLE_BP_SRV.A_BusinessPartnerRoleType" sap:creatable="true" sap:updatable="false" sap:deletable="true" sap:content-version="1"/>
+        <AssociationSet Name="assoc_BP_Address_set" Association="PATHFINDER_SAMPLE_BP_SRV.assoc_BP_Address" sap:creatable="false" sap:updatable="false" sap:deletable="false" sap:content-version="1">
+          <End EntitySet="A_BusinessPartner" Role="FromRole_BP_Address"/>
+          <End EntitySet="A_BusinessPartnerAddress" Role="ToRole_BP_Address"/>
+        </AssociationSet>
+        <AssociationSet Name="assoc_BP_Role_set" Association="PATHFINDER_SAMPLE_BP_SRV.assoc_BP_Role" sap:creatable="false" sap:updatable="false" sap:deletable="false" sap:content-version="1">
+          <End EntitySet="A_BusinessPartner" Role="FromRole_BP_Role"/>
+          <End EntitySet="A_BusinessPartnerRole" Role="ToRole_BP_Role"/>
+        </AssociationSet>
+      </EntityContainer>
+    </Schema>
+  </edmx:DataServices>
+</edmx:Edmx>
