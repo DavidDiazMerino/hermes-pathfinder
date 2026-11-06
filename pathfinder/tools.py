@@ -45,6 +45,25 @@ def sources(args: dict[str, Any], rt: Runtime) -> str:
     if product:
         products = [p for p in products if p["id"] == product] or products
     srcs = [s for s in pack["sources"] if not topic or s.get("topic") == topic]
+    question = (args.get("question") or "").strip()
+    if question:
+        from . import trust
+        recipes = trust.match_recipes(question, pack)
+        return _ok({
+            "domain": pack["id"],
+            "question": question,
+            "recipes": recipes,
+            "no_recipe": not recipes,
+            "next": ("Read the official locations listed (web_extract for pages, pathfinder_read for large "
+                     "JSON or text documents) and cite the source_id each read returns."
+                     if recipes else
+                     "No recipe yet. Search official sites first (site:help.sap.com, site:api.sap.com, "
+                     "site:userapps.support.sap.com, github.com/SAP). If you find where this is documented, "
+                     "save that as a recipe skill backed by the source_id."),
+            "trust_tiers": pack.get("trust_map", {}).get("tiers"),
+            "source_policy": pack["source_policy"],
+            "disclaimer": pack["disclaimer"],
+        })
     return _ok({
         "domain": pack["id"],
         "pack_version": pack["pack_version"],
@@ -251,3 +270,26 @@ def lab(args: dict[str, Any], rt: Runtime) -> str:
         "note": "Checks run offline against the parsed contract; they say nothing about a live system's "
                 "business rules or configuration.",
     })
+
+
+# ---------------------------------------------------------------- read (official documents)
+def read_document(args: dict[str, Any], rt: Runtime, *, trust_map: dict[str, Any], cache_dir, enabled: bool = True) -> str:
+    from . import reader
+    url = (args.get("url") or "").strip()
+    terms = args.get("find") or []
+    if isinstance(terms, str):
+        terms = [t.strip() for t in terms.split(",") if t.strip()]
+    if not url or not terms:
+        return _err("pathfinder_read needs 'url' (an official source) and 'find' (terms to look for)")
+    if not enabled:
+        return _err("network reads are switched off in the plugin settings (network: off)")
+    try:
+        out = reader.read(url, [str(t) for t in terms][:50], trust_map=trust_map, cache_dir=cache_dir,
+                          ledger=rt.ledger(), field=(args.get("field") or None))
+    except reader.ReadError as exc:
+        return _err(str(exc), url=url)
+    except Exception as exc:
+        return _err(f"could not read {url}: {type(exc).__name__}: {exc}", url=url)
+    out["note"] = ("Read live from an official source and recorded in the ledger: cite source_id for these facts. "
+                   "Terms in not_found are absent from this document; say so rather than guessing.")
+    return _ok(out)

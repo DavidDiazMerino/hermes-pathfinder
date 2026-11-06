@@ -13,9 +13,11 @@ provides_tools:
   - pathfinder_sources
   - pathfinder_inspect
   - pathfinder_lab
+  - pathfinder_read
 provides_hooks:
   - pre_tool_call
   - post_tool_call
+  - transform_tool_result
 config_schema:
   gate_mode:
     type: str
@@ -24,3 +26,15 @@ config_schema:
       Evidence gate for skill_manage writes. strict = SAP-domain skills (declared or detected by
       content) need a verified Pathfinder run; declared = only skills that declare
       metadata.pathfinder; off = no gate.
+  network:
+    type: str
+    default: official-only
+    description: >-
+      pathfinder_read fetches documents only from hosts the trust map rates official (SAP) or
+      standard (OData/OASIS). Set to off to disable all network reads by the plugin.
+  source_tagging:
+    type: bool
+    default: true
+    description: >-
+      Tag web_search and web_extract results about the domain with their trust tier (official SAP,
+      SAP employee, community, unknown) and record official pages read as citable evidence.

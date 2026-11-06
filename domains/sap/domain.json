@@ -69,6 +69,19 @@
       ],
       "status": "documented",
       "source": "https://help.sap.com/docs/integration-suite"
+    },
+    {
+      "id": "successfactors",
+      "label": "SAP SuccessFactors HXM Suite",
+      "integration_surface": "OData V2 (main API, also for MDF objects), OData V4 for some areas, Compound Employee API (SOAP, read-only replication), Integration Center (no-code), prepackaged integration content.",
+      "typical_interfaces": [
+        "odata-v2",
+        "odata-v4",
+        "soap",
+        "rest"
+      ],
+      "status": "documented",
+      "source": "https://architecture.learning.sap.com/docs/ref-arch/14d25a"
     }
   ],
   "interface_formats": {
@@ -378,6 +391,80 @@
       "use_for": "Practical cases and known issues. Corroborate with official docs before relying on them.",
       "check": "reachable",
       "trust": "low"
+    },
+    {
+      "id": "sf-ra",
+      "topic": "architecture",
+      "label": "RA: SAP SuccessFactors HXM Suite Reference Architecture (partner contribution)",
+      "url": "https://architecture.learning.sap.com/docs/ref-arch/14d25a",
+      "use_for": "What SuccessFactors is: BizX modules, Employee Central as employee master, effective dating, Foundation Objects vs MDF, positions as the structure.",
+      "check": "content-read"
+    },
+    {
+      "id": "sf-odata-v2-guide",
+      "topic": "find-api",
+      "label": "SAP SuccessFactors API Reference Guide (OData V2), release 2611 (PDF)",
+      "url": "https://help.sap.com/doc/a7c08a422cc14e1eaaffee83610a981d/2611/en-US/SF_HCM_OData_API_DEV.pdf",
+      "use_for": "Behaviour of the SuccessFactors OData V2 API: effective-dated queries (asOfDate, fromDate/toDate), upsert, purgeType, authentication, entity reference.",
+      "check": "title-checked",
+      "notes": "Release-versioned URL; look for the newest release path."
+    },
+    {
+      "id": "sf-odata-v4-guide",
+      "topic": "find-api",
+      "label": "SAP SuccessFactors API Reference Guide (OData V4) (PDF)",
+      "url": "https://help.sap.com/doc/2d1d6fcc4eae4db8b9bbd3103baee1c7/2605/en-US/HXMSuiteODataAPIRefGuideV4.pdf",
+      "use_for": "The SuccessFactors areas exposed through OData V4.",
+      "check": "title-checked"
+    },
+    {
+      "id": "sf-integration-center",
+      "topic": "connectivity",
+      "label": "SAP SuccessFactors Integration Center (PDF, 2H 2026)",
+      "url": "https://help.sap.com/doc/0c0be9005af14c4f89b986a677bf270f/2611/en-US/SF_Integration_Center.pdf",
+      "use_for": "No-code outbound and inbound integrations administered inside SuccessFactors.",
+      "check": "title-checked"
+    },
+    {
+      "id": "sf-compound-employee",
+      "topic": "connectivity",
+      "label": "Employee Central Compound Employee API (PDF)",
+      "url": "https://help.sap.com/doc/60753cd8689244d18a6960f790b08661/2605/en-US/SF_EC_Comp_Emp_API.pdf",
+      "use_for": "SOAP read-only replication of employee master data (snapshot and delta).",
+      "check": "title-checked"
+    },
+    {
+      "id": "sf-api-servers-kba",
+      "topic": "connectivity",
+      "label": "SAP KBA 2215682: SuccessFactors API URLs and external IPs",
+      "url": "https://userapps.support.sap.com/sap/support/knowledge/en/2215682",
+      "use_for": "API host per data center and IPs for allowlisting.",
+      "check": "title-checked"
+    },
+    {
+      "id": "sf-dated-records-kba",
+      "topic": "connectivity",
+      "label": "SAP KBA 2148752: extract EC historical/future dated records with OData",
+      "url": "https://userapps.support.sap.com/sap/support/knowledge/en/2148752",
+      "use_for": "How to get past and future-dated Employee Central records.",
+      "check": "title-checked"
+    },
+    {
+      "id": "sf-odata-course",
+      "topic": "learning",
+      "label": "SAP Learning: Exploring SAP SuccessFactors Employee Central OData API",
+      "url": "https://learning.sap.com/courses/exploring-sap-successfactors-employee-central-odata-api",
+      "use_for": "Guided course on the Employee Central OData API.",
+      "check": "title-checked"
+    },
+    {
+      "id": "cloudification-classic",
+      "topic": "find-api",
+      "label": "Cloudification Repository: classic API classification (objectClassifications_SAP.json)",
+      "url": "https://github.com/SAP/abap-atc-cr-cv-s4hc/blob/main/src/objectClassifications_SAP.json",
+      "use_for": "Which classic objects (BAPIs, function modules) are classic APIs usable for tier-2 extensions.",
+      "check": "title-checked",
+      "license": "Apache-2.0"
     }
   ],
   "pitfalls": [
@@ -514,6 +601,379 @@
     "IDoc",
     "ABAP",
     "Business Accelerator Hub",
-    "SAP Gateway"
+    "SAP Gateway",
+    "SuccessFactors",
+    "SFSF",
+    "Employee Central",
+    "Integration Suite",
+    "Cloud Integration",
+    "Fiori",
+    "clean core"
+  ],
+  "trust_map": {
+    "tiers": {
+      "official": "Published by SAP: product documentation, API catalogue, support notes, SAP's own GitHub data. Counts as documented evidence.",
+      "standard": "Standards body (OData / OASIS). Counts as documented evidence for protocol rules.",
+      "sap-employee": "Blog by an SAP employee. Useful context; confirm product commitments against official docs.",
+      "community": "Partner or community content. Never evidence on its own; corroborate with an official source.",
+      "unknown": "Not in the map. Treat as unverified."
+    },
+    "rules": [
+      {
+        "tier": "official",
+        "host": "help.sap.com"
+      },
+      {
+        "tier": "official",
+        "host": "api.sap.com"
+      },
+      {
+        "tier": "official",
+        "host": "userapps.support.sap.com"
+      },
+      {
+        "tier": "official",
+        "host": "me.sap.com"
+      },
+      {
+        "tier": "official",
+        "host": "support.sap.com"
+      },
+      {
+        "tier": "official",
+        "host": "learning.sap.com"
+      },
+      {
+        "tier": "official",
+        "host": "developers.sap.com"
+      },
+      {
+        "tier": "official",
+        "host": "architecture.learning.sap.com"
+      },
+      {
+        "tier": "official",
+        "host": "discovery-center.cloud.sap"
+      },
+      {
+        "tier": "official",
+        "host": "roadmaps.sap.com"
+      },
+      {
+        "tier": "official",
+        "host": "www.sap.com"
+      },
+      {
+        "tier": "official",
+        "host": "news.sap.com",
+        "note": "announcements; confirm details in product documentation"
+      },
+      {
+        "tier": "official",
+        "host": "sap.github.io"
+      },
+      {
+        "tier": "official",
+        "host": "github.com",
+        "path_prefix": "/sap/"
+      },
+      {
+        "tier": "official",
+        "host": "github.com",
+        "path_prefix": "/sap-samples/"
+      },
+      {
+        "tier": "official",
+        "host": "raw.githubusercontent.com",
+        "path_prefix": "/sap/"
+      },
+      {
+        "tier": "official",
+        "host": "raw.githubusercontent.com",
+        "path_prefix": "/sap-samples/"
+      },
+      {
+        "tier": "standard",
+        "host": "www.odata.org"
+      },
+      {
+        "tier": "standard",
+        "host": "docs.oasis-open.org"
+      },
+      {
+        "tier": "standard",
+        "host": "github.com",
+        "path_prefix": "/oasis-tcs/"
+      },
+      {
+        "tier": "standard",
+        "host": "oasis-tcs.github.io"
+      },
+      {
+        "tier": "sap-employee",
+        "host": "community.sap.com",
+        "path_contains": "-blog-posts-by-sap/"
+      },
+      {
+        "tier": "community",
+        "host": "community.sap.com"
+      },
+      {
+        "tier": "community",
+        "host": "answers.sap.com"
+      },
+      {
+        "tier": "community",
+        "host": "blogs.sap.com"
+      }
+    ]
+  },
+  "source_recipes": [
+    {
+      "id": "released-object",
+      "question": "Is this ABAP object (table, CDS view, BAPI, class, BAdI) released or allowed in my edition, and what replaces it?",
+      "keywords": [
+        "released",
+        "clean core",
+        "cloudification",
+        "successor",
+        "tier 2",
+        "classic api",
+        "bapi",
+        "cds",
+        "table",
+        "allowed in",
+        "deprecated object"
+      ],
+      "where": [
+        {
+          "what": "S/4HANA Cloud Public Edition",
+          "url": "https://raw.githubusercontent.com/SAP/abap-atc-cr-cv-s4hc/main/src/objectReleaseInfoLatest.json"
+        },
+        {
+          "what": "S/4HANA Cloud Private Edition (latest; per-release files objectReleaseInfo_PCE<release>.json)",
+          "url": "https://raw.githubusercontent.com/SAP/abap-atc-cr-cv-s4hc/main/src/objectReleaseInfo_PCELatest.json"
+        },
+        {
+          "what": "SAP BTP ABAP environment",
+          "url": "https://raw.githubusercontent.com/SAP/abap-atc-cr-cv-s4hc/main/src/objectReleaseInfo_BTPLatest.json"
+        },
+        {
+          "what": "Classic APIs for tier-2 extensions",
+          "url": "https://raw.githubusercontent.com/SAP/abap-atc-cr-cv-s4hc/main/src/objectClassifications_SAP.json"
+        }
+      ],
+      "how": "Large JSON: read it with pathfinder_read(url, find=[object names]). Each entry has objectType, objectKey, state (released, deprecated, notToBeReleased, classicAPI, ...) and successors.",
+      "caveats": [
+        "Transactions are not listed; map a transaction to its business object first.",
+        "An object missing from a file is not classified there; say so instead of guessing.",
+        "Use the file for the user's edition and release."
+      ]
+    },
+    {
+      "id": "api-status",
+      "question": "Which published API exists for a business object, which version is current, and is an API deprecated?",
+      "keywords": [
+        "api",
+        "deprecated",
+        "successor api",
+        "odata v4",
+        "which api",
+        "api_",
+        "business accelerator hub",
+        "version 2"
+      ],
+      "where": [
+        {
+          "what": "API page on the Business Accelerator Hub (pattern https://api.sap.com/api/<API_NAME>/overview; JavaScript page, read with web_extract or a browser)",
+          "url": "https://api.sap.com/"
+        },
+        {
+          "what": "API reference in the Help Portal for the user's product (search: site:help.sap.com \"<API name>\" <product>)",
+          "url": "https://help.sap.com/"
+        }
+      ],
+      "how": "Confirm the product and edition on the page, the protocol version, and any deprecation note with its successor.",
+      "caveats": [
+        "The same API name can differ between editions.",
+        "A deprecated API keeps working for a while; recommend the successor for new work."
+      ]
+    },
+    {
+      "id": "sf-api-behaviour",
+      "question": "How does the SuccessFactors OData API behave (effective dating, upsert, purgeType, keys, paging, authentication)?",
+      "keywords": [
+        "successfactors",
+        "employee central",
+        "empjob",
+        "peremployment",
+        "perperson",
+        "asofdate",
+        "fromdate",
+        "effective dated",
+        "upsert",
+        "purgetype",
+        "sfsf"
+      ],
+      "where": [
+        {
+          "source": "sf-odata-v2-guide"
+        },
+        {
+          "source": "sf-dated-records-kba"
+        },
+        {
+          "source": "sf-odata-course"
+        }
+      ],
+      "how": "Read the relevant chapter of the newest API reference guide; quote the rule and the release of the guide.",
+      "caveats": [
+        "Without date parameters queries return records valid today, so future-dated hires are missed.",
+        "Check the guide's release against the tenant's release."
+      ]
+    },
+    {
+      "id": "sf-integration-option",
+      "question": "Which way should I integrate with SuccessFactors (OData, Compound Employee API, Integration Center, prepackaged content)?",
+      "keywords": [
+        "successfactors",
+        "integration center",
+        "compound employee",
+        "replicate employees",
+        "integration suite successfactors",
+        "sfsf adapter"
+      ],
+      "where": [
+        {
+          "source": "sf-ra"
+        },
+        {
+          "source": "sf-odata-v2-guide"
+        },
+        {
+          "source": "sf-compound-employee"
+        },
+        {
+          "source": "sf-integration-center"
+        },
+        {
+          "source": "hub"
+        }
+      ],
+      "how": "Settle direction, volume, read or write, delta needs and whether SAP ships standard content; then compare the options using these documents.",
+      "caveats": [
+        "Look for prepackaged content on the Hub before building."
+      ]
+    },
+    {
+      "id": "sf-api-server",
+      "question": "Which API URL does my SuccessFactors tenant use?",
+      "keywords": [
+        "data center",
+        "api server",
+        "api url",
+        "successfactors url",
+        "dc"
+      ],
+      "where": [
+        {
+          "source": "sf-api-servers-kba"
+        },
+        {
+          "source": "sf-odata-v2-guide"
+        }
+      ],
+      "how": "Find the tenant's data center, then its production or preview API host.",
+      "caveats": [
+        "Hostnames change with data center migrations; use the current list."
+      ]
+    },
+    {
+      "id": "agent-access-policy",
+      "question": "May an AI agent call SAP APIs, and through which path?",
+      "keywords": [
+        "agent",
+        "ai",
+        "mcp",
+        "a2a",
+        "api policy",
+        "autonomous",
+        "joule",
+        "call the api directly"
+      ],
+      "where": [
+        {
+          "source": "api-policy"
+        },
+        {
+          "source": "api-policy-kba"
+        },
+        {
+          "source": "ra-third-party-mcp"
+        },
+        {
+          "source": "agent-gateway-ga"
+        }
+      ],
+      "how": "Quote the policy section that applies and name the SAP-documented governed path.",
+      "caveats": [
+        "The policy is a contract matter; the system owner decides."
+      ]
+    },
+    {
+      "id": "s4-communication-setup",
+      "question": "How do I enable an API for an external system in S/4HANA Cloud (communication scenario, system, user, arrangement)?",
+      "keywords": [
+        "communication arrangement",
+        "communication scenario",
+        "sap_com",
+        "communication user",
+        "communication system",
+        "enable api"
+      ],
+      "where": [
+        {
+          "source": "comm-arrangement-help"
+        },
+        {
+          "source": "comm-management-course"
+        },
+        {
+          "what": "The API's Hub page names its communication scenario",
+          "url": "https://api.sap.com/"
+        }
+      ],
+      "how": "Find the scenario id (SAP_COM_xxxx) on the API page, then follow the communication management steps.",
+      "caveats": [
+        "Public Edition only; on-premise uses Gateway service activation."
+      ]
+    },
+    {
+      "id": "release-availability",
+      "question": "Is a product or feature available in my release, and until when is it maintained?",
+      "keywords": [
+        "release",
+        "availability",
+        "maintenance end",
+        "roadmap",
+        "supported until",
+        "which release"
+      ],
+      "where": [
+        {
+          "source": "pam"
+        },
+        {
+          "source": "roadmaps"
+        },
+        {
+          "source": "maintenance"
+        }
+      ],
+      "how": "Use the PAM for availability and maintenance dates and the Road Map Explorer for planned features.",
+      "caveats": [
+        "Roadmap items are plans, not commitments."
+      ]
+    }
   ]
 }

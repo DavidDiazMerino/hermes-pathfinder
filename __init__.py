@@ -51,6 +51,17 @@ def register(ctx):
     ctx.register_tool(name="pathfinder_lab", toolset="pathfinder", schema=schemas.LAB,
                       handler=lambda args, **kw: tools.lab(args or {}, rt), emoji="🧪")
 
+    def read_handler(args, **kw):
+        from plugins.plugin_storage import plugin_data_dir
+        from .pathfinder import packs as _packs
+        rules = [r for d in _packs.available() for r in _packs.load(d).get("trust_map", {}).get("rules", [])]
+        enabled = str(ctx.get_config("network", default="official-only") or "official-only") != "off"
+        return tools.read_document(args or {}, rt, trust_map={"rules": rules},
+                                   cache_dir=plugin_data_dir(PLUGIN_NAME) / "cache", enabled=enabled)
+
+    ctx.register_tool(name="pathfinder_read", toolset="pathfinder", schema=schemas.READ,
+                      handler=read_handler, emoji="📄")
+
     skills_dir = _ROOT / "skills"
     for child in sorted(skills_dir.iterdir()):
         if child.is_dir() and (child / "SKILL.md").is_file():
@@ -118,6 +129,34 @@ def register(ctx):
     ctx.register_hook("pre_tool_call", on_pre_tool_call)
     ctx.register_hook("post_tool_call", on_post_tool_call)
 
+    # ------------------------------------------------------------ live source trust
+    from .pathfinder import webtrust
+
+    def trust_settings():
+        trust_maps, keywords = [], []
+        for domain in packs.available():
+            pack = packs.load(domain)
+            if pack.get("trust_map"):
+                trust_maps.append(pack["trust_map"])
+            keywords += pack.get("gate_keywords", [])
+        merged = {"rules": [r for tm in trust_maps for r in tm.get("rules", [])]}
+        return merged, gate.keyword_regex(keywords)
+
+    def on_transform_tool_result(tool_name: str = "", args: dict | None = None, result=None, **kwargs):
+        if tool_name not in webtrust.SEARCH_TOOLS | webtrust.READ_TOOLS:
+            return None
+        if not ctx.get_config("source_tagging", default=True):
+            return None
+        try:
+            trust_map, kw_re = trust_settings()
+            return webtrust.annotate(tool_name, args or {}, result, trust_map=trust_map,
+                                     ledger=get_ledger(), kw_re=kw_re)
+        except Exception as exc:
+            logger.warning("pathfinder: source tagging failed: %s", exc)
+            return None
+
+    ctx.register_hook("transform_tool_result", on_transform_tool_result)
+
     # ------------------------------------------------------------ /pathfinder
     def status_text() -> str:
         ledger = get_ledger()
@@ -133,6 +172,11 @@ def register(ctx):
             lines.append("Skills backed by evidence:")
             for name, run_ids in skills.items():
                 lines.append(f"  {name}: {', '.join(run_ids)}")
+        sources = ledger.recent_sources(5)
+        if sources:
+            lines.append("Recent sources read:")
+            for src in sources:
+                lines.append(f"  {src['source_id']}  {src['tier']:<12} {src['url'][:90]}")
         mode, _ = gate_settings()
         lines.append(f"Evidence gate: {mode}")
         return "\n".join(lines)

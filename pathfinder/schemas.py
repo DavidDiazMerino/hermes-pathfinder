@@ -9,7 +9,8 @@ SOURCES = {
         "availability, communication arrangements, SAP reference architectures, API policy and "
         "AI-agent access), each with how it was verified, the governed paths SAP documents for agent "
         "access, the product matrix, known pitfalls labelled 'documented' or 'practitioner', and "
-        "sample contracts you can inspect offline. "
+        "sample contracts you can inspect offline. Pass question=<the user's question> to get the recipe for "
+        "where that is officially documented. "
         "Call this before researching or answering anything about an SAP API, so you start from "
         "trusted sources instead of guessing. Offline; makes no network calls."
     ),
@@ -21,6 +22,11 @@ SOURCES = {
                 "type": "string",
                 "description": "Optional product id to narrow the answer, e.g. 's4hana-cloud-public', "
                                "'s4hana-private-onprem', 'ecc', 'integration-suite'.",
+            },
+            "question": {
+                "type": "string",
+                "description": "Optional: the user's actual question. Returns the matching source recipes: where "
+                               "the official answer lives and how to read it (not the answer itself).",
             },
             "topic": {
                 "type": "string",
@@ -114,5 +120,27 @@ LAB = {
             },
         },
         "required": ["run_id"],
+    },
+}
+
+
+READ = {
+    "name": "pathfinder_read",
+    "description": (
+        "Read a large document live from an official source (SAP or standards body, per the Pathfinder trust "
+        "map) and return only the entries that match the terms you ask for: JSON records whose values equal a "
+        "term (e.g. SAP's Cloudification Repository files, tens of MB) or text lines that contain it. Use it "
+        "when a source recipe points to a big JSON or text file that web_extract cannot handle. Refuses "
+        "non-official hosts. The read is recorded in the evidence ledger and returns a source_id to cite."
+    ),
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "url": {"type": "string", "description": "https URL of the official document."},
+            "find": {"type": "array", "items": {"type": "string"},
+                     "description": "Exact values or phrases to find (e.g. object names). Up to 50."},
+            "field": {"type": "string", "description": "Optional JSON field to match on (e.g. objectKey)."},
+        },
+        "required": ["url", "find"],
     },
 }

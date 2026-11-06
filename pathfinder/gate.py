@@ -14,7 +14,8 @@ from __future__ import annotations
 import re
 from typing import Any
 
-RUN_ID_RE = re.compile(r"\bpf-\d{8}-\d{6}-[0-9a-f]{6}(?:-\d+)?\b")
+RUN_ID_RE = re.compile(r"\b(?:pf|src)-\d{8}-\d{6}-[0-9a-f]{6}(?:-\d+)?\b")
+STRONG = ("verified", "documented")
 _FRONTMATTER_RE = re.compile(r"\A\s*---\s*\n(.*?)\n---\s*(?:\n|\Z)", re.DOTALL)
 _PATHFINDER_BLOCK_RE = re.compile(r"^\s+pathfinder\s*:", re.MULTILINE)
 
@@ -130,16 +131,18 @@ def evaluate(args: dict[str, Any], ledger, *, mode: str = "strict",
     domain_ops = substantive
 
     statuses = {rid: ledger.evidence_status(rid) for rid in cited}
-    bad = {rid: st for rid, st in statuses.items() if st["status"] != "verified"}
-    verified = [rid for rid, st in statuses.items() if st["status"] == "verified"]
+    verified = [rid for rid, st in statuses.items() if st["status"] in STRONG]
+    # Weak sources (community, unknown) never count, but only spoil the batch when nothing strong is cited.
+    bad = {rid: st for rid, st in statuses.items()
+           if st["status"] not in STRONG and not (st["status"] == "weak-source" and verified)}
     decision["verified"] = verified
 
     problems: list[str] = []
     if bad:
-        problems.append("cited runs that are not verified: " + "; ".join(
-            f"{rid} ({st['status']}: {st['reason']})" for rid, st in sorted(bad.items())))
+        problems.append("cited evidence that does not hold: " + "; ".join(
+            f"{rid} ({st['status']}: {st.get('reason', '')})" for rid, st in sorted(bad.items())))
     if not verified:
-        problems.append("no verified Pathfinder run is cited")
+        problems.append("no verified Pathfinder run (lab) or documented official source is cited")
     for op, reasons in domain_ops:
         name = op.get("name") or "?"
         if op.get("action") == "create" or (op.get("action") in ("patch", "edit") and op.get("content")):
@@ -147,8 +150,9 @@ def evaluate(args: dict[str, Any], ledger, *, mode: str = "strict",
                 problems.append(f"skill '{name}': SKILL.md frontmatter lacks a metadata.pathfinder block")
         declared_iface = declared_interface(op_text(op))
         family = {"odata-v2": "v2", "odata-v4": "v4"}.get(declared_iface or "")
-        if family and verified and not any(statuses[r].get("family") == family for r in verified):
-            fams = sorted({str(statuses[r].get("family")) for r in verified})
+        lab_runs = [r for r in verified if statuses[r]["status"] == "verified"]
+        if family and lab_runs and not any(statuses[r].get("family") == family for r in lab_runs):
+            fams = sorted({str(statuses[r].get("family")) for r in lab_runs})
             problems.append(f"skill '{name}' declares interface {declared_iface} but its verified evidence "
                             f"is for OData {', '.join(fams)}; verify a {declared_iface} contract")
         linked = {link["run_id"] for link in ledger.skill_links(name)} if name != "?" else set()
@@ -164,11 +168,13 @@ def evaluate(args: dict[str, Any], ledger, *, mode: str = "strict",
         "Pathfinder evidence gate: this skill write was not applied.\n"
         f"Domain skill(s): {', '.join(decision['domain_skills'])} ({why}).\n"
         "Problems:\n- " + "\n- ".join(problems) + "\n"
-        "To fix: inspect the contract with pathfinder_inspect, test the claims this skill makes with "
-        "pathfinder_lab until it passes, then cite the verified run_id(s) in the SKILL.md frontmatter:\n"
+        "To fix: back the skill with evidence. For contract facts, inspect with pathfinder_inspect and test "
+        "the claims with pathfinder_lab until it passes. For documented facts (released status, deprecations, "
+        "policies, product behaviour), read the official SAP source with web_extract or pathfinder_read; "
+        "each read returns a source_id. Then cite the run_id(s) / source_id(s) in the SKILL.md frontmatter:\n"
         "metadata:\n  pathfinder:\n    domain: sap\n    product: <product id or unknown>\n"
-        "    interface: <odata-v2|odata-v4|...>\n    evidence: [<run_id>]\n"
-        "Only verified runs count; each run's status is shown by /pathfinder status."
+        "    interface: <odata-v2|odata-v4|...>\n    evidence: [<run_id or source_id>]\n"
+        "Only verified lab runs and official or standard sources count; /pathfinder status shows them."
     )
     return decision
 

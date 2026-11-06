@@ -20,7 +20,9 @@ Its first domain pack covers **SAP** (OData V2 and V4 contracts).
 
 | Piece | What it does |
 |---|---|
-| `pathfinder_sources` | Orientation map for the domain: questions to settle, official sources per question, product matrix, pitfalls labelled `documented` or `practitioner`. |
+| `pathfinder_sources` | Where the truth lives: for the user's question, the source recipe (which official SAP source answers it and how to read it, never the answer itself), plus the questions to settle, the product matrix and pitfalls labelled `documented` or `practitioner`. |
+| Live source trust | Hermes's own `web_search` and `web_extract` results about SAP arrive labelled official SAP / standard / SAP employee / community / unknown; official pages read become citable `source_id`s. |
+| `pathfinder_read` | Reads large official documents live (for example SAP's Cloudification Repository, tens of MB) and returns only the entries asked for, recorded as evidence. |
 | `pathfinder_inspect` | Deterministic parser for OData `$metadata` (V2 and V4): keys (including composite), types, lengths, nullability, create/update/delete restrictions (`sap:` attributes, Capabilities and Core vocabularies, inline or external), navigations resolved to their target. |
 | Evidence ledger | Every inspection is stored with the file's SHA-256 and a `run_id` the agent cites. |
 | `enterprise-pathfinder:method` skill | The working method: orient, inspect, answer with provenance, then learn. |
@@ -54,14 +56,21 @@ Try it with the bundled synthetic samples:
 
 ## Safety and disclosures
 
-- **Offline.** No network calls. `pathfinder_inspect` reads only the file you name.
-- **Never calls SAP APIs.** Pathfinder works on contracts you supply. SAP's API Policy (v.4.2026a,
-  section 2.2.2) restricts agentic AI use of SAP APIs to SAP-endorsed architectures; the SAP pack
-  lists the governed paths SAP documents (API Management, SAP-managed MCP, the A2A Agent Gateway)
-  so you can evaluate them with your system owner.
-- XML is parsed with `defusedxml` (no DTDs, entities or external references) and a 5 MB limit.
-- Evidence is written to Hermes's per-plugin data directory (`<HERMES_HOME>/plugin-data/enterprise-pathfinder/`).
-- No credentials are read or stored.
+- **Network: official sources only.** `pathfinder_read` makes HTTPS GET requests only to hosts the
+  trust map rates official (SAP: help.sap.com, api.sap.com, SAP support, SAP's GitHub, ...) or
+  standard (OData / OASIS), including after redirects, with a 40 MB limit; downloads are cached in the
+  plugin data directory. Setting `network: off` disables it. No other tool makes network calls.
+- **Source tagging.** A `transform_tool_result` hook adds trust labels to Hermes's own `web_search`
+  and `web_extract` results when they concern the domain, and records the official pages read in the
+  ledger. Unrelated results are left untouched. Setting `source_tagging: false` turns it off.
+- **Never calls SAP systems or APIs.** Pathfinder reads documentation and contracts. SAP's API Policy
+  (v.4.2026a, section 2.2.2) restricts agentic AI use of SAP APIs to SAP-endorsed architectures; the
+  SAP pack lists the governed paths SAP documents (API Management, SAP-managed MCP, the A2A Agent
+  Gateway) so you can evaluate them with your system owner.
+- `pathfinder_inspect` reads only the file you name; XML is parsed with `defusedxml` (no DTDs,
+  entities or external references) and a 5 MB limit.
+- Evidence and caches live in Hermes's per-plugin data directory
+  (`<HERMES_HOME>/plugin-data/enterprise-pathfinder/`). No credentials are read or stored.
 - Bundled contracts are synthetic, written from scratch from the public OData CSDL format. They
   are not the metadata of any real SAP service.
 

@@ -34,6 +34,16 @@ CREATE TABLE IF NOT EXISTS labs (
     counts_json  TEXT NOT NULL,
     results_json TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS sources_read (
+    source_id  TEXT PRIMARY KEY,
+    url        TEXT NOT NULL,
+    tier       TEXT NOT NULL,
+    title      TEXT,
+    sha256     TEXT NOT NULL,
+    chars      INTEGER NOT NULL,
+    tool       TEXT NOT NULL,
+    read_at    REAL NOT NULL
+);
 CREATE TABLE IF NOT EXISTS skill_links (
     skill_name TEXT NOT NULL,
     run_id     TEXT NOT NULL,
@@ -117,6 +127,16 @@ class Ledger:
 
     def evidence_status(self, run_id: str) -> dict[str, Any]:
         """What a run can back: 'verified' only when its latest lab passed and checked at least one claim."""
+        if run_id.startswith("src-"):
+            src = self.get_source(run_id)
+            if src is None:
+                return {"run_id": run_id, "status": "unknown", "reason": "no such source record in the Pathfinder ledger"}
+            if src["tier"] in ("official", "standard"):
+                return {"run_id": run_id, "status": "documented", "kind": "source", "tier": src["tier"],
+                        "url": src["url"], "family": None, "created_at": src["read_at"]}
+            return {"run_id": run_id, "status": "weak-source", "kind": "source", "tier": src["tier"],
+                    "reason": f"{src['tier']} source; corroborate with an official one", "url": src["url"],
+                    "family": None, "created_at": src["read_at"]}
         run = self.get_run(run_id)
         if run is None:
             return {"run_id": run_id, "status": "unknown", "reason": "no such run in the Pathfinder ledger"}
@@ -133,6 +153,36 @@ class Ledger:
                     "created_at": lab["created_at"]}
         return {"run_id": run_id, "status": "verified", "lab_id": lab["lab_id"], "family": run["family"],
                 "created_at": lab["created_at"]}
+
+    # ------------------------------------------------------------ sources read
+    def record_source(self, *, url: str, tier: str, title: str | None, content: str, tool: str) -> str:
+        """Record that a page was read; the same URL with the same content keeps its id."""
+        import hashlib
+        sha = hashlib.sha256((content or "").encode("utf-8", "replace")).hexdigest()
+        row = self.conn.execute("SELECT source_id FROM sources_read WHERE url = ? AND sha256 = ?",
+                                (url, sha)).fetchone()
+        if row:
+            return row[0]
+        stamp = time.strftime("%Y%m%d-%H%M%S", time.gmtime())
+        base = f"src-{stamp}-{sha[:6]}"
+        source_id, n = base, 1
+        while self.conn.execute("SELECT 1 FROM sources_read WHERE source_id = ?", (source_id,)).fetchone():
+            n += 1
+            source_id = f"{base}-{n}"
+        self.conn.execute("INSERT INTO sources_read VALUES (?,?,?,?,?,?,?,?)",
+                          (source_id, url, tier, title, sha, len(content or ""), tool, time.time()))
+        self.conn.commit()
+        return source_id
+
+    def get_source(self, source_id: str) -> dict[str, Any] | None:
+        cur = self.conn.execute("SELECT * FROM sources_read WHERE source_id = ?", (source_id,))
+        row = cur.fetchone()
+        return dict(zip([c[0] for c in cur.description], row)) if row else None
+
+    def recent_sources(self, limit: int = 10) -> list[dict[str, Any]]:
+        cur = self.conn.execute("SELECT source_id, tier, url, read_at FROM sources_read ORDER BY read_at DESC LIMIT ?",
+                                (limit,))
+        return [dict(zip([c[0] for c in cur.description], r)) for r in cur.fetchall()]
 
     # ------------------------------------------------------------ skills
     def link_skill(self, skill_name: str, run_ids: list[str], action: str) -> None:
