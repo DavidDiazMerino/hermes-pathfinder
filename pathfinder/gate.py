@@ -84,8 +84,9 @@ def keyword_regex(keywords: list[str]) -> re.Pattern | None:
     parts = []
     for kw in keywords:
         esc = re.escape(kw)
-        # Short all-caps acronyms (SAP, BAPI) match case-sensitively as whole words.
-        parts.append(rf"(?-i:\b{esc}\b)" if kw.isupper() and len(kw) <= 5 else rf"{esc}")
+        bounded = rf"(?<![A-Za-z0-9]){esc}(?![A-Za-z0-9])"
+        # Short all-caps acronyms (SAP, BAPI) match case-sensitively.
+        parts.append(rf"(?-i:{bounded})" if kw.isupper() and len(kw) <= 5 else bounded)
     return re.compile("|".join(parts), re.IGNORECASE)
 
 
@@ -182,21 +183,19 @@ def evaluate(args: dict[str, Any], ledger, *, mode: str = "strict",
 # ---------------------------------------------------------------- other tools
 READ_ONLY_TOOLS = {"read_file", "search_files", "skill_view", "skills_list", "tool_search", "tool_describe"}
 FILE_WRITE_TOOLS = {"write_file", "patch"}
-_IMPORT_RE = re.compile(r"(?:from|import)\s+pathfinder\b|pathfinder\.(?:ledger|lab|tools|gate|edmx)\b")
 
 
 def guard_other_tool(tool_name: str, args: dict[str, Any], ledger, *, data_dir: str, skills_roots: list[str],
                      mode: str = "strict", keywords: list[str] | None = None) -> str | None:
-    """Block message for a non-Pathfinder tool call that would touch the evidence ledger or write a
-    domain skill around skill_manage; None to let it run. Not a sandbox: it closes the obvious paths."""
+    """Guard plugin data paths and direct domain-skill writes under skills roots."""
     if mode == "off" or tool_name.startswith("pathfinder_") or tool_name == "skill_manage":
         return None
     if tool_name in READ_ONLY_TOOLS:
         return None
     import json as _json
     blob = _json.dumps(args or {}, ensure_ascii=False, default=str)
-    markers = [m for m in (data_dir, "plugin-data/enterprise-pathfinder", "ledger.db") if m]
-    if any(m in blob for m in markers) or _IMPORT_RE.search(blob):
+    markers = [m for m in (data_dir, "plugin-data/enterprise-pathfinder") if m]
+    if any(m in blob for m in markers):
         return ("Pathfinder: the evidence ledger is written only by the pathfinder_* tools. Use "
                 "pathfinder_inspect and pathfinder_lab instead of reading or changing the ledger or the "
                 "plugin's internals directly. If a pathfinder tool is missing, tell the user.")

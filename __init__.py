@@ -138,7 +138,7 @@ def register(ctx):
             pack = packs.load(domain)
             if pack.get("trust_map"):
                 trust_maps.append(pack["trust_map"])
-            keywords += pack.get("gate_keywords", [])
+            keywords += pack.get("relevance_keywords", pack.get("gate_keywords", []))
         merged = {"rules": [r for tm in trust_maps for r in tm.get("rules", [])]}
         return merged, gate.keyword_regex(keywords)
 

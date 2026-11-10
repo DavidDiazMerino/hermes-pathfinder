@@ -121,8 +121,40 @@ def test_legacy_flat_shape(runtime):
 
 def test_keyword_matching():
     rx = gate.keyword_regex(KEYWORDS)
-    assert rx.search("Call the SAP Gateway") and rx.search("odata v4") and rx.search("read $metadata")
+    assert rx.search("Call the SAP Gateway") and rx.search("ABAP class")
     assert not rx.search("sapling growth") and not rx.search("asap please")
+
+
+def test_keywords_do_not_match_inside_words():
+    rx = gate.keyword_regex(KEYWORDS)
+    for text in (
+        "Process geodata tiles with GDAL",
+        "Google Cloud integration cost audit",
+        "integration suite of tests",
+        "kidoc generator",
+        "employee central office",
+        "Clean core muscles workout",
+        "SuccessFactorsDemo",
+        "XS/4HANA",
+    ):
+        assert not rx.search(text), text
+    for text in ("My SAP notes", "S/4HANA Cloud", "send an IDoc", "SuccessFactors tenant"):
+        assert rx.search(text), text
+
+
+def test_unrelated_skill_about_geodata_is_untouched(runtime):
+    content = ("---\nname: geodata-audit\ndescription: Process geodata tiles with GDAL\n---\n"
+               "\nAudit Google Cloud integration costs.\n")
+    decision = ev(create(content, name="geodata-audit"), runtime)
+    assert decision["allow"] and decision["domain_skills"] == []
+
+
+def test_relevance_keywords_superset():
+    pack = packs.load("sap")
+    assert set(pack["gate_keywords"]) <= set(pack["relevance_keywords"])
+    rx = gate.keyword_regex(pack["relevance_keywords"])
+    assert rx.search("read $metadata") and rx.search("OData V4")
+    assert not rx.search("Process geodata tiles") and not rx.search("read $metadataSuffix")
 
 
 DATA = "/home/u/.hermes/plugin-data/enterprise-pathfinder"
@@ -136,9 +168,17 @@ def guard(tool, args, runtime, mode="strict"):
 
 def test_guard_blocks_ledger_tampering(runtime):
     assert guard("terminal", {"command": f"sqlite3 {DATA}/ledger.db 'insert into labs ...'"}, runtime)
-    assert guard("execute_code", {"code": "from pathfinder.ledger import Ledger"}, runtime)
-    assert guard("write_file", {"path": "/tmp/x.py", "content": "import pathfinder\n"}, runtime)
-    assert guard("terminal", {"command": "rm ledger.db"}, runtime)
+    assert guard("terminal", {"command": f"rm -rf {DATA}"}, runtime)
+
+
+def test_guard_ignores_unrelated_ledger_and_pathfinder_names(runtime):
+    for tool, args in (
+        ("terminal", {"command": "sqlite3 ledger.db 'select * from invoices'"}),
+        ("write_file", {"path": "/tmp/x.py", "content": "from pathfinder import astar\n"}),
+        ("terminal", {"command": "python -c 'import pathfinder'"}),
+        ("web_search", {"query": "python pathfinder.tools module docs"}),
+    ):
+        assert guard(tool, args, runtime) is None, (tool, args)
 
 
 def test_guard_allows_reads_and_unrelated_work(runtime):
@@ -152,7 +192,7 @@ def test_guard_blocks_direct_domain_skill_writes(runtime):
     msg = guard("write_file", {"path": "/home/u/.hermes/skills/sap-x/SKILL.md", "content": skill_md()}, runtime)
     assert msg and "skill_manage" in msg
     assert guard("patch", {"path": "/home/u/.hermes/skills/enterprise/sap-y/SKILL.md", "old_string": "a",
-                           "new_string": "use the OData $metadata"}, runtime)
+                           "new_string": "use the SAP Gateway service"}, runtime)
     ok = "---\nname: git-tidy\ndescription: x\n---\n# Git\n"
     assert guard("write_file", {"path": "/home/u/.hermes/skills/git-tidy/SKILL.md", "content": ok}, runtime) is None
 
