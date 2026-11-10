@@ -3,6 +3,21 @@
 Run on 2026-11-06 with Hermes v0.23.0, model `google/gemini-4-argon` (Nous provider), through real
 `hermes chat` sessions. Reproduce with `eval/run_eval.py`.
 
+## Summary
+
+What the measurements support as of 2026-11-10:
+
+- **Cost on a realistically sized contract (500 KB): about half the tokens.** 51% fewer with
+  Gemini 4 Argon in the first round, and 52% to 65% fewer across four cheaper models in the
+  repeated second round.
+- **Cost on tiny contracts (3 KB): higher.** Between the same and about three times the tokens,
+  depending on the model.
+- **Accuracy: no gain claimed.** In the repeated second round all 33 scored plugin runs were perfect
+  against 26 of 28 control runs. The sample is too small and too uneven to call that a difference.
+- **Not measured yet:** the evidence gate, the source map, and questions about SAP that are not
+  about a contract. A trap-question round from 2026-11-06 is in `eval/results/` but is not reported
+  here: 26 of its 64 sessions read evaluation files, so it has to be repeated first.
+
 ## Setup
 
 - **A (control):** a Hermes profile cloned from the same user profile, same model and config, **without**
@@ -64,16 +79,108 @@ Run on 2026-11-06 with Hermes v0.23.0, model `google/gemini-4-argon` (Nous provi
 Raw per-run data: `eval/results/*.json` (the first file's built-in summary predates the
 infrastructure-error filter; the table above recomputes it from valid runs only).
 
-## Cheaper models (second round)
+## Cheaper models (second round, repeated on 2026-11-10)
+
+Same setup with four cheaper models from Nous Portal, the same model in both conditions, the three
+contracts, 3 runs each. This round was first run on 2026-11-06 with session folders inside the
+repository, and 17 of its 72 sessions read evaluation files. It was repeated on 2026-11-10 with
+session folders outside the repository. The repeat is the one to read; the original is kept at the
+end for the record.
+
+Result file: [`eval/results/20261110-155101.json`](../eval/results/20261110-155101.json).
+Estimated cost of the 72 sessions: $3.75, including the ones not scored.
+
+### Which sessions were scored
+
+| | Sessions |
+|---|---:|
+| Run | 72 |
+| Failed with HTTP 429 (rate limit, eight parallel workers) | 6 |
+| Flagged for reading evaluation files | 6 |
+| In both groups | 1 |
+| **Scored** | **61** (28 control, 33 plugin) |
+
+All six flagged sessions were Gemini 3.8 Flash control runs on the two small contracts, so that
+model has no control result for them. No plugin session was flagged. See
+[How the control found the answers](#how-the-control-found-the-answers).
+
+### Accuracy and use of the plugin
+
+| Model | Control runs | Control checks | Plugin runs | Plugin checks | Called Pathfinder in plugin runs |
+|---|---:|---:|---:|---:|---:|
+| GPT-6 Luna | 9 | 216/216 | 7 | 162/162 | 6/7 |
+| GPT-6.1 Terra | 8 | 192/198 | 9 | 216/216 | 9/9 |
+| Gemini 3.8 Flash | 2 | 68/72 | 9 | 216/216 | 9/9 |
+| GLM 5.3 Flash | 9 | 216/216 | 8 | 180/180 | 8/8 |
+| Total | 28 | 692/702 | 33 | 774/774 | 32/33 |
+
+The two imperfect control runs: Terra returned `null` instead of `true` for operations the Product
+V4 contract does not restrict (12/18), and Gemini Flash listed only the key as required on create
+for four entity sets of the large contract (32/36).
+
+### Large contract (500 KB), mean per scored run
+
+| Model | Runs A / C | Tokens A → C | Cost A → C | Time A → C | Tool calls A → C |
+|---|---:|---|---|---|---|
+| GPT-6 Luna | 3 / 2 | 433 k → 205 k (−53%) | $0.0137 → $0.0083 (−39%) | 84 s → 60 s | 12.3 → 8.5 |
+| GPT-6.1 Terra | 3 / 3 | 221 k → 106 k (−52%) | $0.0757 → $0.0494 (−35%) | 63 s → 48 s | 14.0 → 5.3 |
+| Gemini 3.8 Flash | 2 / 3 | 804 k → 349 k (−57%) | $0.1665 → $0.1200 (−28%) | 222 s → 186 s | 25.0 → 11.3 |
+| GLM 5.3 Flash | 3 / 2 | 673 k → 236 k (−65%) | $0.0220 → $0.0093 (−58%) | 231 s → 128 s | 23.3 → 8.5 |
+
+One of Luna's two plugin runs on this contract did not call Pathfinder; it is included.
+
+### Small contracts (3 KB), the two samples pooled, mean per scored run
+
+| Model | Runs A / C | Tokens A → C | Cost A → C |
+|---|---:|---|---|
+| GPT-6 Luna | 6 / 5 | 46 k → 131 k (2.8x) | $0.0029 → $0.0050 (1.7x) |
+| GPT-6.1 Terra | 5 / 6 | 73 k → 76 k (1.0x) | $0.0368 → $0.0357 (1.0x) |
+| Gemini 3.8 Flash | 0 / 6 | no control → 140 k | no control → $0.0589 |
+| GLM 5.3 Flash | 6 / 6 | 91 k → 200 k (2.2x) | $0.0041 → $0.0082 (2.0x) |
+
+### What this round shows
+
+- **The saving on a large contract holds across models.** All four used 52% to 65% fewer tokens
+  with the plugin, and 28% to 58% less money. This matches the first round (51% fewer tokens with
+  Gemini 4 Argon). Tool calls fell too: the agent can ask the inspector for the entity sets it
+  needs instead of paging through the XML.
+- **On tiny contracts the plugin still costs more** for Luna and GLM, about two to three times the
+  tokens. For Terra it made no difference.
+- **Every scored plugin run was perfect** (33 of 33), against 26 of 28 control runs. We do not
+  claim an accuracy gain from this: see the limits below.
+- **The plugin was used in 32 of 33 plugin runs.** When the task hands the agent a `$metadata`
+  file, the models find the inspector. This says nothing about open questions without a file.
+
+### Limits of this round
+
+- The exclusions left unequal cells: two or three runs per cell, and no Gemini control on the small
+  contracts. Read the percentages as sizes of effect, not as precise figures.
+- One generated large contract and two hand-written small ones, all synthetic.
+- The plugin condition also held skills learned earlier with the plugin.
+- Costs come from the endpoint's published per-token prices and Hermes's token counts, which
+  include prompt caching.
+- This benchmark does not measure the evidence trail, the skill gate or the SAP source map
+  (editions, released APIs, communication arrangements, API policy).
+
+### How the control found the answers
+
+Moving the session folders out of the repository was not enough. In one flagged session, Gemini 3.8
+Flash without the plugin searched the user's home directory for a field name from the requested
+JSON shape (`grep -rn "required_on_create" /home/...`), found this repository, read
+`eval/expected/business_partner_v2.json` and other sessions' archived answers, and ran
+`eval/score.py` on its own candidate answer before replying. The other five flagged sessions read
+the same kind of files.
+
+The detector caught these because the paths appear in the tool arguments. It would not catch a
+read through a relative path or a shell variable. A repeat that cannot be gamed needs the sessions
+to run in a sandbox that cannot see the repository at all.
+
+### Original round of 2026-11-06 (contaminated, kept for the record)
 
 **Contamination notice.** 17 of the 72 sessions accessed evaluation files. The affected control
 sessions were 9 Gemini 3.8 Flash runs and 3 GPT-6.1 Terra runs. With the plugin enabled, 4 Gemini 3.8
-Flash runs and 1 GLM 5.3 Flash run were affected. The tables below preserve the historical results.
-The repeat with workspaces outside the repository is reported separately below.
-
-Same setup with four cheaper models from Nous Portal, the same model in both conditions, the three
-contracts, 3 runs each: 72 sessions, about $3.39 in total at the endpoint's published prices.
-Result file: `eval/results/20261106-115900.json`.
+Flash runs and 1 GLM 5.3 Flash run were affected. The tables below are the results as first
+published. Result file: `eval/results/20261106-115900.json`, about $3.39.
 
 | Model | Condition | Checks correct | Perfect runs | Cost (9 runs) | Tokens (9 runs) | Used the plugin |
 |---|---|---|---|---|---|---|
@@ -95,41 +202,13 @@ Large contract only (mean per run):
 | Gemini 3.8 Flash | $0.2865 → $0.1984 (−31%) | 1.21 M → 0.74 M | 190 s → 167 s |
 | GLM 5.3 Flash | $0.0159 → $0.0198 (+25%) | 444 k → 586 k | 118 s → 137 s |
 
-Observations from the original round, subject to the contamination above
+What we wrote about this round and how it compares with the repeat:
 
-- **Accuracy is still essentially equal.** Current cheap models read OData metadata well. The one
-  failure of the kind the plugin targets appeared once: GLM without the plugin missed four
-  restrictions declared in external `<Annotations>` blocks (32/36); with the plugin it missed one
-  (35/36), copying a value wrongly from the inspector's output. Two GLM runs returned no JSON in
-  both conditions (format, not understanding). Luna with the plugin once left a key out of the
-  required fields.
-- **Cost on the large contract fell about 31% for Terra and Gemini Flash**, less for Luna (which
-  mostly did not use the plugin), and rose for GLM, driven by one run that looped through 32 tool
-  calls.
-- **Weaker models do not always pick up the tools.** Luna used Pathfinder in 4 of 9 runs even
-  with the plugin enabled; Gemini Flash without the plugin wrote and ran its own XML-parsing
-  scripts. Tool discoverability matters as much as the tools.
-- What this benchmark does not measure: the evidence trail, the skill gate, and the SAP source map
-  (editions, released APIs, communication arrangements, API policy). Those need their own
-  evaluation.
-
-### Repeat with external workspaces
-
-On 2026-11-10 we repeated the same 72 contract sessions with eight workers and separate working
-directories outside the repository. The estimated total cost was $3.75, including failed and
-excluded sessions. [Per-session results](../eval/results/20261110-155101.json)
-
-The detector flagged six sessions (8.3%), all Gemini 3.8 Flash controls on the two small contracts.
-The model searched outside its workspace and read expected answers in the repository. Six sessions
-also failed with HTTP 429, including one of the flagged sessions. That left 61 sessions for scoring.
-
-| Model | Control runs | Control checks | Plugin runs | Plugin checks | Called Pathfinder in plugin runs |
-|---|---:|---:|---:|---:|---:|
-| GPT-6 Luna | 9 | 216/216 | 7 | 162/162 | 6/7 |
-| GPT-6.1 Terra | 8 | 192/198 | 9 | 216/216 | 9/9 |
-| Gemini 3.8 Flash | 2 | 68/72 | 9 | 216/216 | 9/9 |
-| GLM 5.3 Flash | 9 | 216/216 | 8 | 180/180 | 8/8 |
-
-The Gemini control column covers only the large contract. The exclusions left different numbers
-and mixes of contracts in the two conditions, which limits accuracy comparisons. An external
-working directory still leaves the answer files reachable through the agent's filesystem tools.
+| Observation in the original round | In the repeat |
+|---|---|
+| Cost on the large contract fell about 31% for Terra and Gemini Flash | Held: 35% and 28% in money, 52% and 57% in tokens |
+| Cost rose 25% for GLM, driven by one run that looped through 32 tool calls | Did not repeat: GLM cost fell 58% |
+| Luna used Pathfinder in 4 of 9 plugin runs | 6 of 7 |
+| GLM missed restrictions declared in external `<Annotations>` blocks without the plugin (32/36), and two GLM runs returned no JSON in both conditions | Did not repeat: GLM scored 216/216 without the plugin and 180/180 with it |
+| Luna with the plugin once left a key out of the required fields | Did not repeat |
+| Gemini Flash without the plugin wrote and ran its own XML-parsing scripts | Its control sessions also searched for and read the expected answers; that is why they are excluded |
