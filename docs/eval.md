@@ -23,6 +23,12 @@ Run on 2026-11-06 with Hermes v0.23.0, model `google/gemini-4-argon` (Nous provi
   the question covers 6 entity sets chosen for their hard cases.
 - 3 runs per condition and contract. Runs refused by the gateway for infrastructure reasons
   (`Gateway draining` while Hermes synced dependencies) were retried and are not counted.
+- New contract and trap runs use session folders under the system temporary directory
+  (`pf-eval/`), with `--work-dir` available for another location outside the repository.
+  Transcripts and answers are archived in `eval/runs/`. The summaries report and exclude
+  sessions whose transcript shows an ordinary tool call referencing a path in the repository or
+  plugin installation outside the session's workspace. This check covers paths visible in tool
+  arguments.
 
 ## Results
 
@@ -60,6 +66,11 @@ infrastructure-error filter; the table above recomputes it from valid runs only)
 
 ## Cheaper models (second round)
 
+**Contamination notice.** 17 of the 72 sessions accessed evaluation files. The affected control
+sessions were 9 Gemini 3.8 Flash runs and 3 GPT-6.1 Terra runs. With the plugin enabled, 4 Gemini 3.8
+Flash runs and 1 GLM 5.3 Flash run were affected. The tables below preserve the historical results.
+The repeat with workspaces outside the repository is reported separately below.
+
 Same setup with four cheaper models from Nous Portal, the same model in both conditions, the three
 contracts, 3 runs each: 72 sessions, about $3.39 in total at the endpoint's published prices.
 Result file: `eval/results/20261106-115900.json`.
@@ -84,7 +95,7 @@ Large contract only (mean per run):
 | Gemini 3.8 Flash | $0.2865 → $0.1984 (−31%) | 1.21 M → 0.74 M | 190 s → 167 s |
 | GLM 5.3 Flash | $0.0159 → $0.0198 (+25%) | 444 k → 586 k | 118 s → 137 s |
 
-What this round adds:
+Observations from the original round, subject to the contamination above
 
 - **Accuracy is still essentially equal.** Current cheap models read OData metadata well. The one
   failure of the kind the plugin targets appeared once: GLM without the plugin missed four
@@ -101,3 +112,24 @@ What this round adds:
 - What this benchmark does not measure: the evidence trail, the skill gate, and the SAP source map
   (editions, released APIs, communication arrangements, API policy). Those need their own
   evaluation.
+
+### Repeat with external workspaces
+
+On 2026-11-10 we repeated the same 72 contract sessions with eight workers and separate working
+directories outside the repository. The estimated total cost was $3.75, including failed and
+excluded sessions. [Per-session results](../eval/results/20261110-155101.json)
+
+The detector flagged six sessions (8.3%), all Gemini 3.8 Flash controls on the two small contracts.
+The model searched outside its workspace and read expected answers in the repository. Six sessions
+also failed with HTTP 429, including one of the flagged sessions. That left 61 sessions for scoring.
+
+| Model | Control runs | Control checks | Plugin runs | Plugin checks | Called Pathfinder in plugin runs |
+|---|---:|---:|---:|---:|---:|
+| GPT-6 Luna | 9 | 216/216 | 7 | 162/162 | 6/7 |
+| GPT-6.1 Terra | 8 | 192/198 | 9 | 216/216 | 9/9 |
+| Gemini 3.8 Flash | 2 | 68/72 | 9 | 216/216 | 9/9 |
+| GLM 5.3 Flash | 9 | 216/216 | 8 | 180/180 | 8/8 |
+
+The Gemini control column covers only the large contract. The exclusions left different numbers
+and mixes of contracts in the two conditions, which limits accuracy comparisons. An external
+working directory still leaves the answer files reachable through the agent's filesystem tools.

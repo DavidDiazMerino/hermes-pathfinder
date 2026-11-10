@@ -6,7 +6,8 @@ expectations (eval/expected/). Usage:
 
     python eval/run_eval.py --runs 3 --parallel 2
 
-Raw transcripts go to eval/runs/<stamp>/ (gitignored); the summary to eval/results/<stamp>.json.
+Sessions work outside the repository. Transcripts and answers go to eval/runs/<stamp>/ (gitignored);
+the summary goes to eval/results/<stamp>.json.
 """
 
 from __future__ import annotations
@@ -23,7 +24,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 from eval import score as sc  # noqa: E402
-from eval import gen_large  # noqa: E402
+from eval import gen_large, isolation  # noqa: E402
 
 CONTRACTS = {
     "business_partner_v2": ROOT / "domains/sap/fixtures/business_partner_v2.edmx",
@@ -73,16 +74,17 @@ def cost_usd(tokens: dict | None, price: dict | None) -> float | None:
 
 
 def run_one(stamp_dir: Path, condition: str, contract_id: str, n: int, max_turns: int, timeout: int,
-            model: str | None = None, pricing: dict | None = None) -> dict:
+            model: str | None = None, pricing: dict | None = None, *, archive_dir: Path,
+            forbidden_roots: list[str]) -> dict:
     tag = (model or "default").replace("/", "_")
     ws = stamp_dir / tag / f"{condition}-{contract_id}-{n}"
-    ws.mkdir(parents=True, exist_ok=True)
+    ws.mkdir(parents=True)
     gen = GENERATED.get(contract_id)
     shutil.copy(gen["path"] if gen else CONTRACTS[contract_id], ws / "service_metadata.xml")
     scope = (" Answer only for these entity sets: " + ", ".join(gen["targets"]) + ".") if gen else ""
     prompt = PROMPT.replace("{scope}", scope)
     cmd = ["hermes", "-p", CONDITIONS[condition], "chat", "-q", prompt, "--oneshot",
-           "--format", "stream-json", "--max-turns", str(max_turns)]
+           "--in", str(ws), "--format", "stream-json", "--max-turns", str(max_turns)]
     if model:
         cmd += ["-m", model]
     retries = 0
@@ -100,8 +102,6 @@ def run_one(stamp_dir: Path, condition: str, contract_id: str, n: int, max_turns
             time.sleep(30)
             continue
         break
-    (ws / "transcript.jsonl").write_text(out or "", encoding="utf-8")
-
     tools, final, token_detail, duration, served, error = [], "", None, None, None, None
     for line in (out or "").splitlines():
         if not line.startswith("{"):
@@ -119,6 +119,8 @@ def run_one(stamp_dir: Path, condition: str, contract_id: str, n: int, max_turns
             token_detail = ev.get("tokens") or {}
             duration = ev.get("duration_ms")
             error = ev.get("error")
+    isolation.archive_session(archive_dir / ws.relative_to(stamp_dir), out or "", final)
+    contaminated = isolation.contaminated(out or "", str(ws), forbidden_roots)
     tokens = (token_detail or {}).get("total")
     expected = gen["expected"] if gen else sc.load_expected(contract_id)
     result = sc.score(sc.extract_answer(final), expected)
@@ -126,6 +128,7 @@ def run_one(stamp_dir: Path, condition: str, contract_id: str, n: int, max_turns
     price = (pricing or {}).get(served or model or "")
     return {"model": model or served, "served_model": served, "condition": condition, "contract": contract_id,
             "run": n, "exit": code, "error": error, "wall_s": wall, "infra_error": infra_error, "retries": retries,
+            "contaminated": contaminated,
             "duration_ms": duration, "tokens": tokens, "token_detail": token_detail,
             "cost_usd": cost_usd(token_detail, price), "tool_calls": len(tools), "tools": tools,
             "used_pathfinder": any(str(t).startswith("pathfinder_") for t in tools), **result}
@@ -135,12 +138,18 @@ def summarise(rows: list[dict]) -> list[dict]:
     out = []
     keys = sorted({(r.get("model") or "", r["condition"], r["contract"]) for r in rows})
     for model, cond, cid in keys:
-        rs = [r for r in rows if (r.get("model") or "") == model and r["condition"] == cond
-              and r["contract"] == cid and not r.get("infra_error")]
+        group = [r for r in rows if (r.get("model") or "") == model and r["condition"] == cond
+                 and r["contract"] == cid]
+        rs = [r for r in group if not r.get("infra_error") and not r.get("contaminated")]
+        excluded = sum(bool(r.get("contaminated")) for r in group)
+        counts = {"model": model, "condition": cond, "contract": cid, "runs": len(rs),
+                  "excluded_contaminated": excluded}
         if not rs:
+            if excluded:
+                out.append(counts)
             continue
         avg = lambda k: round(sum((r.get(k) or 0) for r in rs) / len(rs), 4)  # noqa: E731
-        out.append({"model": model, "condition": cond, "contract": cid, "runs": len(rs),
+        out.append({**counts,
                     "score_mean": round(sum(r["ratio"] for r in rs) / len(rs), 3),
                     "perfect_runs": sum(r["points"] == r["total"] for r in rs),
                     "answered_runs": sum(r["parsed"] for r in rs),
@@ -160,13 +169,21 @@ def main() -> None:
     ap.add_argument("--seed", type=int, default=7)
     ap.add_argument("--max-turns", type=int, default=25)
     ap.add_argument("--timeout", type=int, default=900)
-    ap.add_argument("--runs-dir", default=str(ROOT / "eval" / "runs"))
+    ap.add_argument("--work-dir", "--runs-dir", default=str(isolation.default_work_dir()),
+                    help="workspace base outside the repository (default: %(default)s)")
     args = ap.parse_args()
 
     stamp = time.strftime("%Y%m%d-%H%M%S")
-    stamp_dir = Path(args.runs_dir) / stamp
+    try:
+        stamp_dir = isolation.round_workspace(ROOT, args.work_dir, stamp)
+    except ValueError as exc:
+        ap.error(str(exc))
+    stamp_dir.mkdir(parents=True)
+    archive_dir = ROOT / "eval" / "runs" / stamp
+    archive_dir.mkdir(parents=True)
+    forbidden_roots = isolation.evaluation_roots(ROOT)
     if "large_v4" in args.contracts.split(","):
-        path, expected, targets = gen_large.generate(stamp_dir / "_generated", seed=args.seed)
+        path, expected, targets = gen_large.generate(archive_dir / "_generated", seed=args.seed)
         GENERATED["large_v4"] = {"path": path, "expected": expected, "targets": targets}
         CONTRACTS.setdefault("large_v4", path)
     models = [m for m in args.models.split(",") if m] or [None]
@@ -183,7 +200,8 @@ def main() -> None:
         (results_dir / f"{stamp}.json").write_text(json.dumps(report, indent=1), encoding="utf-8")
 
     with ThreadPoolExecutor(max_workers=args.parallel) as pool:
-        futures = [pool.submit(run_one, stamp_dir, c, k, n, args.max_turns, args.timeout, m, pricing)
+        futures = [pool.submit(run_one, stamp_dir, c, k, n, args.max_turns, args.timeout, m, pricing,
+                               archive_dir=archive_dir, forbidden_roots=forbidden_roots)
                    for m, c, k, n in jobs]
         for f in futures:
             r = f.result()
