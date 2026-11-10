@@ -19,7 +19,7 @@ from . import trust
 MAX_BYTES = 40 * 1024 * 1024
 TIMEOUT_S = 60
 MAX_HITS = 25
-USER_AGENT = "hermes-enterprise-pathfinder/0.1 (+https://github.com/DavidDiazMerino/hermes-pathfinder)"
+USER_AGENT = "hermes-enterprise-pathfinder/0.2.0 (+https://github.com/DavidDiazMerino/hermes-pathfinder)"
 
 
 class ReadError(Exception):

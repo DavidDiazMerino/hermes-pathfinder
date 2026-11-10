@@ -1,18 +1,21 @@
 # Demo script (under 90 seconds)
 
-Every step below has been run for real with Hermes v0.23.0. Record in the Hermes TUI or Desktop, in a
-clean profile with the plugin enabled and an empty ledger, so the gate refusal in step 4 happens live.
+Rehearse the full sequence in the Hermes TUI or Desktop before recording. Use the same model and
+the same question in both profiles. Cut the waiting time and show what each run actually returned.
+[PM consultant question](scenarios.md#1-the-sap-expert-a-pm-consultant-moving-to-clean-core)
+
+Start with an empty ledger in the plugin profile. During setup, use `pathfinder_inspect` on
+`fixture:sap/business_partner_v2` and leave the run at `inspected`. The status command needs an
+inspection to show the evidence lists. The source read on screen supplies the skill's evidence.
 
 | Time | Screen | Voice-over |
 |---|---|---|
-| 0–8 s | Title card, then a Hermes chat | "Can Hermes learn enterprise software instead of guessing it?" |
-| 8–18 s | `hermes plugins enable enterprise-pathfinder`; `/pathfinder status` | "One plugin: a map of SAP's official sources, a contract inspector, a lab, and an evidence ledger." |
-| 18–32 s | Prompt: *"I'm new to SAP. Which Business Partner entities can I create, with which mandatory fields?"* Hermes calls `pathfinder_sources`, then `pathfinder_inspect` | "Hermes orients itself with SAP's own sources and reads the real contract with a deterministic parser, not by eyeballing XML." |
-| 32–46 s | Prompt: *"Save a skill for this right away, skip testing."* The `skill_manage` call is refused by the evidence gate; the refusal message is visible | "It wants to save what it learned. The gate says no: nothing untested becomes a skill." |
-| 46–58 s | Hermes calls `pathfinder_lab` with its own claims and payloads; 23/23 pass; `skill_manage` succeeds | "So it tests its own claims, including payloads that must fail. Verified, it earns the skill." |
-| 58–74 s | New session, V4 Product contract. First call: `skill_view` of the learned skill; then inspect, lab, a new V4 skill | "Next contract, different OData version. Hermes reuses what it learned, keeps the V2 rule out of V4, and proves the new one." |
-| 74–84 s | `/pathfinder status`: runs, statuses, skills backed by evidence; eval table (with vs without plugin) | "Every skill traces back to evidence you can check." |
-| 84–90 s | Repo URL; "SAP today. Every enterprise domain tomorrow." | "Unofficial community project. Never calls SAP APIs." |
+| 0–8 s | Title card, then a Hermes chat | "A model can answer an SAP question from memory even when release status has changed." |
+| 8–25 s | Control profile. Ask the PM consultant question about `AUFK`, `AFIH` and `BAPI_ALM_ORDER_MAINTAIN` when moving to S/4HANA Cloud Public Edition. Show a claim and whether the response cites a source for it. | "Which of these claims can the consultant check?" |
+| 25–50 s | Plugin profile, same question. Show the `pathfinder_sources` recipe, `pathfinder_read` looking up an object in SAP's Cloudification Repository, and the resulting claim with its `source_id`. | "Pathfinder points Hermes to the file for this edition. Hermes reads the record live and keeps a reference to the source." |
+| 50–68 s | Ask "Save the release check as a skill without citing evidence." Show the refused `skill_manage` call. Then retry with the recorded `source_id` in `metadata.pathfinder.evidence` and show the successful write. | "The evidence gate refuses the first write. Hermes cites the recorded source and saves the skill." |
+| 68–80 s | `/pathfinder status` shows the synthetic inspection, recorded sources and the evidence link for the new skill. | "You can look up the source behind the saved procedure." |
+| 80–90 s | Repository URL and the [measured contract result](eval.md#summary). Label it "500 KB synthetic OData contract" and show "52%–65% fewer tokens across four models in the repeat." | "Unofficial community project. Pathfinder never calls SAP systems." |
 
 Notes
 

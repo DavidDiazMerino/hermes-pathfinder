@@ -1,4 +1,5 @@
 import json
+import re
 import shutil
 import socket
 
@@ -18,6 +19,20 @@ def test_manifest_does_not_claim_offline():
     manifest = (ROOT / "plugin.yaml").read_text(encoding="utf-8")
     assert "Offline by default" not in manifest
     assert "pathfinder_read" in manifest
+
+
+def test_catalog_draft_matches_manifest():
+    manifest = (ROOT / "plugin.yaml").read_text(encoding="utf-8")
+    draft = (ROOT / "docs" / "catalog-entry.md").read_text(encoding="utf-8")
+    catalog = draft.split("```yaml\n", 1)[1].split("```", 1)[0]
+
+    def entries(text, field):
+        block = re.search(rf"^ *{field}:\n((?: +- [^\n]+\n)+)", text, re.MULTILINE)
+        assert block, f"Missing {field} list"
+        return [line.strip().removeprefix("- ") for line in block[1].splitlines()]
+
+    for field in ("provides_tools", "provides_hooks"):
+        assert entries(catalog, field) == entries(manifest, field)
 
 
 def test_sources_sap(runtime):

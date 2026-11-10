@@ -37,12 +37,21 @@ with unrestricted shell access running as your user could still work around it.
 
 Two real sessions, a PM expert and a SuccessFactors newcomer, are written up in [docs/scenarios.md](docs/scenarios.md).
 
-Measured with real Hermes sessions, same model with and without the plugin ([docs/eval.md](docs/eval.md)):
-accuracy was equal (all runs correct in both conditions); on a realistically sized contract
-(500 KB, 48 entity types) the plugin used about 51% fewer tokens and 34% less time, and every answer
-came with a verified lab record. On tiny contracts it costs more.
+On a 500 KB OData contract, Pathfinder used 51% fewer tokens with Gemini 4 Argon and 52% to 65%
+fewer across four cheaper models. Tiny contracts generally cost more. Accuracy comparisons remain
+inconclusive. The gate, source map and open-ended SAP questions remain unmeasured. We repeated
+the second round after sessions read evaluation files and excluded affected runs from the rerun's
+results. [Evaluation](docs/eval.md)
 
-## Install (development)
+## Install
+
+Once listed in the catalog
+
+```bash
+hermes plugins install enterprise-pathfinder
+```
+
+### Development install
 
 ```bash
 git clone https://github.com/DavidDiazMerino/hermes-pathfinder

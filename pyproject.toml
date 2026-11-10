@@ -1,6 +1,6 @@
 [project]
 name = "enterprise-pathfinder"
-version = "0.1.0"
+version = "0.2.0"
 description = "Hermes plugin: map, contract inspector and evidence ledger for enterprise software domains (SAP first)"
 requires-python = ">=3.11"
 license = "MIT"
