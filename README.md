@@ -58,21 +58,29 @@ Try it with the bundled synthetic samples:
 
 ## Safety and disclosures
 
-- **Network: official sources only.** `pathfinder_read` makes HTTPS GET requests only to hosts the
-  trust map rates official (SAP: help.sap.com, api.sap.com, SAP support, SAP's GitHub, ...) or
-  standard (OData / OASIS), including after redirects, with a 40 MB limit; downloads are cached in the
-  plugin data directory. Setting `network: off` disables it. No other tool makes network calls.
-- **Source tagging.** A `transform_tool_result` hook adds trust labels to Hermes's own `web_search`
-  and `web_extract` results when they concern the domain, and records the official pages read in the
-  ledger. Unrelated results are left untouched. Setting `source_tagging: false` turns it off.
+- **Network.** `pathfinder_read` is enabled by default. On request, it starts an HTTPS GET at a URL
+  the trust map rates official (such as SAP Help) or standard (OData / OASIS). It checks the final
+  URL after redirects and reads up to 40 MB. Set `network: off` to disable network reads by Pathfinder.
+- **Hooks.** `pre_tool_call` receives the arguments of every tool call. It checks `skill_manage`
+  writes for evidence and can block other calls that reference plugin data paths or directly write
+  SAP-domain skills under the skills directory. `post_tool_call` records which evidence backs a
+  successful or staged skill write. `transform_tool_result` adds trust labels to Hermes's
+  `web_search` and `web_extract` results about the domain. Set `source_tagging: false` to turn off
+  tagging and recording pages read by `web_extract`.
 - **Never calls SAP systems or APIs.** Pathfinder reads documentation and contracts. SAP's API Policy
   (v.4.2026a, section 2.2.2) restricts agentic AI use of SAP APIs to SAP-endorsed architectures; the
   SAP pack lists the governed paths SAP documents (API Management, SAP-managed MCP, the A2A Agent
   Gateway) so you can evaluate them with your system owner.
 - `pathfinder_inspect` reads only the file you name; XML is parsed with `defusedxml` (no DTDs,
   entities or external references) and a 5 MB limit.
-- Evidence and caches live in Hermes's per-plugin data directory
-  (`<HERMES_HOME>/plugin-data/enterprise-pathfinder/`). No credentials are read or stored.
+- **What is stored.** Each successful inspection saves the full parsed contract as JSON, with its
+  hash, under `<HERMES_HOME>/plugin-data/enterprise-pathfinder/contracts/`. For each official or
+  domain-related page read with `web_extract`, Pathfinder records the URL, title when available,
+  trust tier, content hash and content length. `pathfinder_read` records source metadata and caches
+  the downloaded document. Lab results and skill evidence links are stored in the same plugin data
+  directory. Pathfinder keeps these records locally and does not read or store credentials. There is
+  no automatic cleanup. Deleting `<HERMES_HOME>/plugin-data/enterprise-pathfinder/` clears the cache
+  and permanently removes the evidence history.
 - Bundled contracts are synthetic, written from scratch from the public OData CSDL format. They
   are not the metadata of any real SAP service.
 

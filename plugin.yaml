@@ -3,7 +3,8 @@ version: 0.1.0
 manifest_version: 2
 description: >-
   Map, contract inspector and evidence ledger that help Hermes work safely in enterprise
-  software domains. First pack: SAP (OData V2/V4). Offline by default.
+  software domains. First pack: SAP (OData V2/V4). Reads official documentation over HTTPS on request
+  (pathfinder_read; can be switched off); never calls SAP systems or APIs.
 author: David Díaz Merino
 license: MIT
 homepage: https://github.com/DavidDiazMerino/hermes-pathfinder

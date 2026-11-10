@@ -5,13 +5,19 @@ import socket
 import pytest
 
 from pathfinder import tools
-from conftest import FIXTURES
+from conftest import FIXTURES, ROOT
 
 
 def call(fn, rt, **args):
     out = fn(args, rt)
     assert isinstance(out, str)  # Hermes tools must return JSON strings
     return json.loads(out)
+
+
+def test_manifest_does_not_claim_offline():
+    manifest = (ROOT / "plugin.yaml").read_text(encoding="utf-8")
+    assert "Offline by default" not in manifest
+    assert "pathfinder_read" in manifest
 
 
 def test_sources_sap(runtime):
