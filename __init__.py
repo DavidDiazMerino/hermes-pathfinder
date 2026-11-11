@@ -194,9 +194,10 @@ def register(ctx):
                 return f"Pathfinder ledger unavailable: {exc}"
         mission = (
             f"Pathfinder mission: {text}\n\n"
-            f"Load skill_view('{PLUGIN_NAME}:method') and follow it. Use pathfinder_sources to orient "
-            "yourself, pathfinder_inspect for any fact about a contract and pathfinder_lab to test your "
-            "claims. Cite run_ids for claims about contracts."
+            f"Load skill_view('{PLUGIN_NAME}:method') and follow it. Start with "
+            "pathfinder_sources(question=...). For documentation facts read the official source (web_extract, "
+            "or pathfinder_read for large files) and cite its source_id. For facts about a contract use "
+            "pathfinder_inspect and test your claims with pathfinder_lab, citing the run_id."
         )
         try:
             if ctx.inject_message(mission, session_key=session_key or None):

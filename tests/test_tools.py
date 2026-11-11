@@ -159,3 +159,11 @@ def test_inspect_multiple_entities_in_one_call(runtime):
     assert set(r["entity_types"]) == {"A_BusinessPartnerAddressType", "A_BusinessPartnerRoleType"}
     assert {s["name"] for s in r["entity_sets"]} == {"A_BusinessPartnerAddress", "A_BusinessPartnerRole"}
     assert r["not_found"] == ["Nope"]
+
+
+def test_method_skill_covers_both_paths():
+    text = (ROOT / "skills" / "method" / "SKILL.md").read_text(encoding="utf-8")
+    for needle in ("question=", "pathfinder_read", "source_id", "pathfinder_trust",
+                   "pathfinder_inspect", "pathfinder_lab"):
+        assert needle in text, needle
+    assert len(text.splitlines()) <= 90

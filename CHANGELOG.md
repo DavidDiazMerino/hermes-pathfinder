@@ -10,6 +10,8 @@
   domain-skill writes (PF-03).
 - Documented network access, hooks, data retention and the security reporting process (PF-04).
 - Added CI, an updated demo script and a draft catalog entry (PF-20).
+- Updated the method skill and the `/pathfinder` mission for source recipes, `pathfinder_read` and
+  `source_id` evidence (PF-05).
 
 ## 0.1.0
 
